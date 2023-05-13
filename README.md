@@ -1,2 +1,2 @@
 # Game-Of-Life
-Creation of Conway's Game Of Life in the browser.
+Creation of Conway's Game Of Life.
