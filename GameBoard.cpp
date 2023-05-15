@@ -1,49 +1,50 @@
 #include "pch.h"
 #include "GameBoard.h"
+#include "WrappedPoint.h"
 #include <iostream>
 
 GameBoard::GameBoard(uint32_t chunkSideSize, uint32_t chunksPerRow) :
 	m_points(BitArray(chunkSideSize* chunkSideSize* chunksPerRow* chunksPerRow)),
 	c_sideLength(chunkSideSize * chunksPerRow), c_chunkSideSize(chunkSideSize),
 	c_chunksPerRow(chunksPerRow) {
+
 	uint32_t currX = 0;
 	uint32_t currY = 0;
 	m_chunks = (Chunk***) new Chunk*[chunksPerRow * chunksPerRow];
-	for (int i = 0; i < chunksPerRow; i++) {
-		for (int j = 0; j < chunksPerRow; j++) {
+	for (uint32_t i = 0; i < chunksPerRow; i++) {
+		for (uint32_t j = 0; j < chunksPerRow; j++) {
 			m_chunks[i][j] = new Chunk(*this, currX, currY);
 			currX += chunkSideSize;
 		}
 		currX = 0;
 		currY += chunkSideSize;
 	}
+
+}
+
+GameBoard::~GameBoard() {
+
+	for (uint32_t i = 0; i < c_chunksPerRow; i++) {
+		for (uint32_t j = 0; j < c_chunksPerRow; j++) {
+			delete m_chunks[i][j];
+		}
+	}
+
 }
 
 void GameBoard::setPoint(uint32_t x, uint32_t y, bool value) {
 	m_points.set(xyToIndex(x, y), value);
 }
 
-bool GameBoard::getPoint(uint32_t x, uint32_t y) {
+bool GameBoard::getPoint(int x, int y) {
 	return m_points.get(xyToIndex(x, y));
 }
 
-uint32_t GameBoard::xyToIndex(uint32_t x, uint32_t y) {
-	// All of these while loops could be if to avoid the double check if we assume
-	// that a given x, y will not be further than one gameboard away (resonable assumption).
-	while (x < 0) {
-		x += c_sideLength;
-	}
-	while (x >= c_sideLength) {
-		x -= c_sideLength;
-	}
-	while (y < 0) {
-		y += c_sideLength;
-	}
-	while (y >= c_sideLength) {
-		y -= c_sideLength;
-	}
+uint32_t GameBoard::xyToIndex(int x, int y) {
 
-	return x + y * c_sideLength;
+	WrappedPoint wp({x, y}, {c_sideLength, c_sideLength});
+	return wp.x() + wp.y() * c_sideLength;
+
 }
 
 GameBoard::Chunk::Chunk(GameBoard& gb, uint32_t offsetX, uint32_t offsetY) :

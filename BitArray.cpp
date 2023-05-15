@@ -48,7 +48,7 @@ void BitArray::checkIndex(uint32_t index) const {
 
 std::ostream& operator<<(std::ostream& os, BitArray const& m) {
 	os << "0b";
-	for (int i = 0; i < m.size(); i++) {
+	for (uint32_t i = 0; i < m.size(); i++) {
 		os << m.get(i);
 	}
 	return os;

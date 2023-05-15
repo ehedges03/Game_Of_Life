@@ -1,13 +1,12 @@
 #pragma once
 #include "BitArray.h"
 
-class GameBoard;
-
 class GameBoard {
 public:
 	GameBoard(uint32_t chuckSideSize, uint32_t chunksPerRow);
+	~GameBoard();
 	void setPoint(uint32_t x, uint32_t y, bool value);
-	bool getPoint(uint32_t x, uint32_t y);
+	bool getPoint(int x, int y);
 
 private:
 	class Chunk;
@@ -19,7 +18,7 @@ private:
 	BitArray m_points;
 	Chunk*** m_chunks;
 	
-	uint32_t xyToIndex(uint32_t x, uint32_t y);
+	uint32_t xyToIndex(int x, int y);
 };
 
 class GameBoard::Chunk {
