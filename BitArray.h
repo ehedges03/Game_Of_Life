@@ -4,17 +4,18 @@
 
 class BitArray {
 public:
-	BitArray(int bits);
+	BitArray() = delete;
+	BitArray(uint32_t bits);
 	~BitArray();
-	bool get(int index) const;
-	void set(int index, bool value);
-	int size() const;
+	bool get(uint32_t index) const;
+	void set(uint32_t index, bool value);
+	uint32_t size() const;
 
 private:
 	uint8_t* m_bytes;
-	int m_byteSize;
-	int m_bits;
-	void checkIndex(int index) const;
+	uint32_t m_byteSize;
+	uint32_t m_bits;
+	void checkIndex(uint32_t index) const;
 };
 
 std::ostream& operator<<(std::ostream& os, BitArray const& m);

@@ -4,7 +4,7 @@
 #include <stdexcept>
 #include <iostream>
 
-BitArray::BitArray(int bits) {
+BitArray::BitArray(uint32_t bits) {
 	m_bits = bits;
 	int bytes = bits / 8;
 	if (bits % 8 > 0) {
@@ -12,20 +12,20 @@ BitArray::BitArray(int bits) {
 	}
 	m_byteSize = bytes;
 
-	m_bytes = (uint8_t*) calloc(bytes, sizeof(uint8_t));
+	m_bytes = new uint8_t[bytes];
 }
 
 BitArray::~BitArray() {
-	free(m_bytes);
+	delete m_bytes;
 }
 
-bool BitArray::get(int index) const{
+bool BitArray::get(uint32_t index) const {
 	checkIndex(index);
 
 	return (m_bytes[index / 8] >> (7 - (index % 8))) & 0b1;
 }
 
-void BitArray::set(int index, bool value) {
+void BitArray::set(uint32_t index, bool value) {
 	checkIndex(index);
 
 	if (value) {
@@ -36,11 +36,11 @@ void BitArray::set(int index, bool value) {
 	}
 }
 
-int BitArray::size() const {
+uint32_t BitArray::size() const {
 	return m_bits;
 }
 
-void BitArray::checkIndex(int index) const {
+void BitArray::checkIndex(uint32_t index) const {
 	if (index < 0 || index > m_bits - 1) {
 		throw std::invalid_argument("Index is out of range.");
 	}

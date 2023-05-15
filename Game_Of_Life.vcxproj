@@ -102,10 +102,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="BitArray.h" />
+    <ClInclude Include="GameBoard.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BitArray.cpp" />
+    <ClCompile Include="GameBoard.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
