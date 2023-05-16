@@ -1,5 +1,6 @@
 ﻿#include "pch.h"
 #include "BitArray.h"
+#include "WrappedPoint.h"
 #include <iostream>
 
 using namespace winrt;
@@ -28,4 +29,16 @@ int main()
     init_apartment();
     Uri uri(L"http://aka.ms/cppwinrt");
     printf("Hello, %ls!\n", uri.AbsoluteUri().c_str());
+
+    // test WrappedPoint -- imagine all the unit tests yay
+
+    WrappedPoint testWPoint1({ -2, -6 }, { 5, 5 });
+    WrappedPoint testWPoint2({ 5, 15 }, { 5, 5 });
+
+    bool result1 = (testWPoint1.x() == 3) && (testWPoint1.y() == 4);
+    bool result2 = (testWPoint2.x() == 0) && (testWPoint2.y() == 0);
+
+    std::cout << '\n' << "negative wrap: " << (result1 ? "success " : "failed ") << testWPoint1.x() << ", " << testWPoint1.y();
+    std::cout << '\n' << "positive wrap: " << (result2 ? "success " : "failed ") << testWPoint2.x() << ", " << testWPoint2.y();
+
 }
