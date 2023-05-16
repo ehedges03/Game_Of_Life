@@ -34,6 +34,4 @@ private:
 	uint32_t m_x;
 	uint32_t m_y;
 
-	const uint32_t c_nullSignBit = ~0x80000000; // most significant / sign bit of 32 bit int is 0, all others are 1
-
 };
