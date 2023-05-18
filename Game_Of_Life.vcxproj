@@ -103,6 +103,7 @@
   <ItemGroup>
     <ClInclude Include="BitArray.h" />
     <ClInclude Include="GameBoard.h" />
+    <ClInclude Include="WrappedPoint.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
