@@ -8,7 +8,7 @@ GameBoard method definitions
 */
 
 GameBoard::GameBoard(uint32_t chunkSideSize, uint32_t chunksPerRow) :
-	m_points(BitArray(chunkSideSize* chunkSideSize* chunksPerRow* chunksPerRow)),
+	m_cells(BitArray(chunkSideSize* chunkSideSize* chunksPerRow* chunksPerRow)),
 	c_sideLength(chunkSideSize * chunksPerRow), c_chunkWidth(chunkSideSize),
 	c_chunksPerRow(chunksPerRow) {
 
@@ -45,11 +45,11 @@ GameBoard::~GameBoard() {
 }
 
 void GameBoard::setPoint(uint32_t x, uint32_t y, bool value) {
-	m_points.set(xyToIndex(x, y), value);
+	m_cells.set(xyToIndex(x, y), value);
 }
 
 bool GameBoard::getPoint(int x, int y) {
-	return m_points.get(xyToIndex(x, y));
+	return m_cells.get(xyToIndex(x, y));
 }
 
 uint32_t GameBoard::xyToIndex(int x, int y) {
@@ -59,11 +59,6 @@ uint32_t GameBoard::xyToIndex(int x, int y) {
 
 }
 
-bool GameBoard::nextPointStatus(int x, int y) {
-	// TODO
-	return false;
-}
-
 uint8_t GameBoard::countNeighbors(uint32_t x, uint32_t y) {
 	// Would it be faster or slower to check if the value is 4 to avoid checking all pixels
 	// The if statements could lead to a slower processing time
@@ -71,16 +66,16 @@ uint8_t GameBoard::countNeighbors(uint32_t x, uint32_t y) {
 	// counts neighbors row by row
 	uint8_t count = 0;
 	uint32_t leftPoint = xyToIndex(x - 1, y - 1);
-	count += m_points.get(leftPoint);
-	count += m_points.get(leftPoint + 1);
-	count += m_points.get(leftPoint + 2);
+	count += m_cells.get(leftPoint);
+	count += m_cells.get(leftPoint + 1);
+	count += m_cells.get(leftPoint + 2);
 	leftPoint += c_sideLength;
-	count += m_points.get(leftPoint);
-	count += m_points.get(leftPoint + 2);
+	count += m_cells.get(leftPoint);
+	count += m_cells.get(leftPoint + 2);
 	leftPoint += c_sideLength;
-	count += m_points.get(leftPoint);
-	count += m_points.get(leftPoint + 1);
-	return count + m_points.get(leftPoint + 2);
+	count += m_cells.get(leftPoint);
+	count += m_cells.get(leftPoint + 1);
+	return count + m_cells.get(leftPoint + 2);
 }
 
 /*
@@ -96,15 +91,12 @@ GameBoard::Chunk::Chunk(GameBoard& gb, const Varient& varient, uint32_t offsetX,
 	std::cout << "X: " << offsetX << " Y: " << offsetY << " test: " << m_varient.ySide << ' ' << m_varient.xSide << '\n';
 }
 
-// TODO: is this needed, or is Chunk::nextPointStatus sufficient
-uint8_t GameBoard::Chunk::countNeighbors(uint32_t x, uint32_t y) {
+bool GameBoard::Chunk::calcNextCellStatus(int x, int y) {
 	x += c_offsetX; y += c_offsetY;
-	return m_gb.countNeighbors(x, y);
-}
+	bool alive = m_gb.getPoint(x, y);
+	uint8_t neighbors = m_gb.countNeighbors(x, y);
 
-bool GameBoard::Chunk::nextPointStatus(int x, int y) {
-	x += c_offsetX; y += c_offsetY;
-	return m_gb.nextPointStatus(x, y);
+	return neighbors == 3 || (alive && neighbors == 2);
 }
 
 void GameBoard::Chunk::processChunk() {
@@ -113,12 +105,12 @@ void GameBoard::Chunk::processChunk() {
 	int y, x;
 	
 	for (x = 0; x < m_gb.c_chunkWidth; x++) {
-		rows[0].set(x, countNeighbors(x, 0));
+		rows[0].set(x, calcNextCellStatus(x, 0));
 	}
 
 	for (y = 1; y < m_gb.c_chunkWidth; y++) {
 		for (x = 0; x < m_gb.c_chunkWidth; x++) {
-			rows[currRow].set(y, countNeighbors(x, y));
+			rows[currRow].set(y, calcNextCellStatus(x, y));
 		}
 		currRow = !currRow;
 		y--;

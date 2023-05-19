@@ -18,7 +18,7 @@ public:
 	bool getPoint(int x, int y);
 
 	// TODO: returns the next status (alive/dead) of a point on the gameboard
-	bool nextPointStatus(int x, int y);
+	// bool calcNextPointStatus(int x, int y);
 
 private:
 	class Chunk;
@@ -27,7 +27,7 @@ private:
 	const uint32_t c_sideLength;
 	const uint32_t c_chunkWidth;
 	const uint32_t c_chunksPerRow;
-	BitArray m_points;
+	BitArray m_cells;
 	Varient m_varients[4];
 	Chunk*** m_chunks;
 
@@ -42,8 +42,7 @@ class GameBoard::Chunk {
 public:
 	Chunk(GameBoard& gb, const Varient& varient, uint32_t offsetX, uint32_t offsetY);
 
-	uint8_t countNeighbors(uint32_t x, uint32_t y);
-	bool nextPointStatus(int x, int y);
+	bool calcNextCellStatus(int x, int y);
 
 	void processChunk();
 	void writeBorder();
