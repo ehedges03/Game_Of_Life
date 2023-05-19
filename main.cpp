@@ -1,6 +1,7 @@
 ﻿#include "pch.h"
 #include "BitArray.h"
 #include "WrappedPoint.h"
+#include "GameBoard.h"
 #include <iostream>
 
 using namespace winrt;
@@ -9,6 +10,7 @@ using namespace Windows::Foundation;
 int main()
 {
     BitArray mybits = BitArray(9);
+    GameBoard test = GameBoard(4, 4);
 
     std::cout << mybits << '\n';
 
