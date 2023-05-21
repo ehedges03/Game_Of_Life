@@ -1,7 +1,7 @@
 #pragma once
 #include "BitArray.h"
 
-struct Varient {
+struct Variant {
 	uint32_t ySide;
 	uint32_t xSide;
 	uint32_t xCorner;
@@ -28,7 +28,7 @@ private:
 	const uint32_t c_chunkWidth;
 	const uint32_t c_chunksPerRow;
 	BitArray m_cells;
-	Varient m_varients[4];
+	Variant m_variants[4];
 	Chunk*** m_chunks;
 
 	// helper function used by nextPointStatus
@@ -40,7 +40,7 @@ private:
 class GameBoard::Chunk {
 
 public:
-	Chunk(GameBoard& gb, const Varient& varient, uint32_t offsetX, uint32_t offsetY);
+	Chunk(GameBoard& gb, const Variant& variant, uint32_t offsetX, uint32_t offsetY);
 
 	bool calcNextCellStatus(int x, int y);
 
@@ -50,7 +50,7 @@ public:
 private:
 	GameBoard& m_gb;
 	BitArray m_border;
-	const Varient& m_varient;
+	const Variant& m_variant;
 	const uint32_t c_offsetX;
 	const uint32_t c_offsetY;
 	bool m_processNextFrame = false;
