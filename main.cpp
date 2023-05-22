@@ -4,13 +4,17 @@
 #include "GameBoard.h"
 #include <iostream>
 
-using namespace winrt;
-using namespace Windows::Foundation;
+void simpleBitArrayTest();
+void simpleWrappedPointTest();
 
 int main()
 {
+    simpleBitArrayTest();
+    simpleWrappedPointTest();
+}
+
+void simpleBitArrayTest() {
     BitArray mybits = BitArray(9);
-    GameBoard test = GameBoard(4, 4);
 
     std::cout << mybits << '\n';
 
@@ -27,11 +31,9 @@ int main()
     mybits.set(8, false);
 
     std::cout << mybits << '\n';
+}
 
-    init_apartment();
-    Uri uri(L"http://aka.ms/cppwinrt");
-    printf("Hello, %ls!\n", uri.AbsoluteUri().c_str());
-
+void simpleWrappedPointTest() {
     // test WrappedPoint -- imagine all the unit tests yay
 
     WrappedPoint testWPoint1({ -2, -6 }, { 5, 5 });
@@ -42,5 +44,4 @@ int main()
 
     std::cout << '\n' << "negative wrap: " << (result1 ? "success " : "failed ") << testWPoint1.x() << ", " << testWPoint1.y();
     std::cout << '\n' << "positive wrap: " << (result2 ? "success " : "failed ") << testWPoint2.x() << ", " << testWPoint2.y();
-
 }
