@@ -1,7 +1,5 @@
-#include "pch.h"
 #include "GameBoard.h"
-#include "WrappedPoint.h"
-#include <iostream>
+#include "Utils/WrappedPoint.h"
 
 /*
 GameBoard method definitions
@@ -9,7 +7,7 @@ GameBoard method definitions
 
 GameBoard::GameBoard(uint32_t chunkSideSize, uint32_t chunksPerRow) :
 	m_cells(BitArray(chunkSideSize* chunkSideSize* chunksPerRow* chunksPerRow)),
-	c_sideLength(chunkSideSize * chunksPerRow), c_chunkWidth(chunkSideSize),
+	c_sideLength(chunkSideSize* chunksPerRow), c_chunkWidth(chunkSideSize),
 	c_chunksPerRow(chunksPerRow) {
 
 	uint32_t sideMax = chunkSideSize - 1;
@@ -21,9 +19,9 @@ GameBoard::GameBoard(uint32_t chunkSideSize, uint32_t chunksPerRow) :
 
 	uint32_t currX = 0;
 	uint32_t currY = 0;
-	m_chunks = new Chunk**[chunksPerRow];
+	m_chunks = new Chunk * *[chunksPerRow];
 	for (uint32_t i = 0; i < chunksPerRow; i++) {
-		m_chunks[i] = new Chunk*[chunksPerRow];
+		m_chunks[i] = new Chunk * [chunksPerRow];
 		for (uint32_t j = 0; j < chunksPerRow; j++) {
 			// TODO: Should I instead just pass copies of the variant so it does not have to dereference
 			m_chunks[i][j] = new Chunk(*this, m_variants[(i % 2) * 2 + (j % 2)], currX, currY);
@@ -54,7 +52,7 @@ bool GameBoard::getPoint(int x, int y) {
 
 uint32_t GameBoard::xyToIndex(int x, int y) {
 
-	WrappedPoint wp({x, y}, {c_sideLength, c_sideLength});
+	WrappedPoint wp({ x, y }, { c_sideLength, c_sideLength });
 	return wp.x() + wp.y() * c_sideLength;
 
 }
@@ -103,7 +101,7 @@ void GameBoard::Chunk::processChunk() {
 	uint32_t maxwh = m_gb.c_chunkWidth;    // compiler will take this out and it cleans up the code a little
 	BitArray rowBuffers[2] = { BitArray(maxwh), BitArray(maxwh) };
 	uint8_t hotBuffer = 1;
-	int y, x;
+	uint32_t y, x;
 
 	// put the first row into the buffer
 	for (x = 0; x < maxwh; x++) {
@@ -117,7 +115,7 @@ void GameBoard::Chunk::processChunk() {
 				rowBuffers[hotBuffer].set(x, calcNextCellStatus(x, y + 1));
 			}
 		}
-		
+
 		hotBuffer ^= 1;    // switch active buffer before writing 
 
 		// write hot buffer the the board (y)

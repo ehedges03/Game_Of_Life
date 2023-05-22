@@ -33,7 +33,7 @@ private:
 
 	// helper function used by nextPointStatus
 	uint8_t countNeighbors(uint32_t x, uint32_t y);
-	
+
 	uint32_t xyToIndex(int x, int y);
 };
 

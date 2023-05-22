@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "BitArray.h"
 #include <stdlib.h>
 #include <stdexcept>

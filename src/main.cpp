@@ -1,6 +1,5 @@
-﻿#include "pch.h"
 #include "BitArray.h"
-#include "WrappedPoint.h"
+#include "Utils/WrappedPoint.h"
 #include "GameBoard.h"
 #include <iostream>
 
