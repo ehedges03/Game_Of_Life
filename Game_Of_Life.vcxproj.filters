@@ -39,5 +39,8 @@
   <ItemGroup>
     <None Include=".gitignore" />
     <None Include="README.md" />
+    <None Include="res\shaders\Basic.vertex.glsl" />
+    <None Include="packages.config" />
+    <None Include="res\shaders\Basic.fragment.glsl" />
   </ItemGroup>
 </Project>
