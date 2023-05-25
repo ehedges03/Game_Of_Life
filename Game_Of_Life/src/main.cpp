@@ -1,15 +1,19 @@
 #include "BitArray.h"
 #include "Utils/WrappedPoint.h"
 #include "GameBoard.h"
+#include <libFunni/log.h>
+#include <libFunni/pointtech.h>
 #include <iostream>
 
 void simpleBitArrayTest();
 void simpleWrappedPointTest();
+void simpleLoggerTest();
 
 int main()
 {
     simpleBitArrayTest();
     simpleWrappedPointTest();
+    simpleLoggerTest();
 }
 
 void simpleBitArrayTest() {
@@ -43,4 +47,20 @@ void simpleWrappedPointTest() {
 
     std::cout << '\n' << "negative wrap: " << (result1 ? "success " : "failed ") << testWPoint1.x() << ", " << testWPoint1.y();
     std::cout << '\n' << "positive wrap: " << (result2 ? "success " : "failed ") << testWPoint2.x() << ", " << testWPoint2.y();
+}
+
+void simpleLoggerTest() {
+
+    // only logd will function
+    funni::Logger<true, false, false, false> logger("logtest");
+
+    std::cout << "\n\n";
+
+    logger.Start();
+
+    logger.logd();
+    logger.logi();
+    logger.logw();
+    logger.logi();
+
 }
