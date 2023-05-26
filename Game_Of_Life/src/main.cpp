@@ -1,6 +1,8 @@
 #include "BitArray.h"
 #include "Utils/WrappedPoint.h"
 #include "GameBoard.h"
+//#include <libFunni/log.h>
+//#include <libFunni/pointtech.h>
 #include <iostream>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -13,6 +15,7 @@
 
 void simpleBitArrayTest();
 void simpleWrappedPointTest();
+//void simpleLoggerTest();
 
 // Helpful documentaion: https://docs.gl/
 
@@ -152,6 +155,7 @@ int main()
 
 	simpleBitArrayTest();
 	simpleWrappedPointTest();
+	//simpleLoggerTest();
 	return 0;
 }
 
@@ -184,6 +188,22 @@ void simpleWrappedPointTest() {
 	bool result1 = (testWPoint1.x() == 3) && (testWPoint1.y() == 4);
 	bool result2 = (testWPoint2.x() == 0) && (testWPoint2.y() == 0);
 
-	std::cout << '\n' << "negative wrap: " << (result1 ? "success " : "failed ") << testWPoint1.x() << ", " << testWPoint1.y();
-	std::cout << '\n' << "positive wrap: " << (result2 ? "success " : "failed ") << testWPoint2.x() << ", " << testWPoint2.y();
+    std::cout << '\n' << "negative wrap: " << (result1 ? "success " : "failed ") << testWPoint1.x() << ", " << testWPoint1.y();
+    std::cout << '\n' << "positive wrap: " << (result2 ? "success " : "failed ") << testWPoint2.x() << ", " << testWPoint2.y();
 }
+
+//void simpleloggertest() {
+//
+//    // only logd will function
+//    funni::Logger<true, false, false, false> logger("logtest");
+//
+//    std::cout << "\n\n";
+//
+//    logger.Start();
+//
+//    logger.logd();
+//    logger.logi();
+//    logger.logw();
+//    logger.logi();
+//
+//}
