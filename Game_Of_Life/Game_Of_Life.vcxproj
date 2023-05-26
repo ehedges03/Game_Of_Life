@@ -147,12 +147,18 @@
   <ItemGroup>
     <ClCompile Include="src\BitArray.cpp" />
     <ClCompile Include="src\GameBoard.cpp" />
+    <ClCompile Include="src\IndexBuffer.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\Renderer.cpp" />
+    <ClCompile Include="src\VertexBuffer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\BitArray.h" />
     <ClInclude Include="src\GameBoard.h" />
+    <ClInclude Include="src\IndexBuffer.h" />
+    <ClInclude Include="src\Renderer.h" />
     <ClInclude Include="src\Utils\WrappedPoint.h" />
+    <ClInclude Include="src\VertexBuffer.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include=".gitignore" />

@@ -4,33 +4,19 @@
 //#include <libFunni/log.h>
 //#include <libFunni/pointtech.h>
 #include <iostream>
-#include <GL/glew.h>
+#include "Renderer.h"
 #include <GLFW/glfw3.h>
 #include <fstream>
 #include <sstream>
 
-#define ASSERT(x) if (!(x)) __debugbreak();
-// TODO: Dev version attaches this, but prod version just has passthrough, not sure how to do this
-#define GLCall(x) GLClearError(); x; ASSERT(GLLogCall(#x, __FILE__, __LINE__))
+#include "VertexBuffer.h"
+#include "IndexBuffer.h"
 
 void simpleBitArrayTest();
 void simpleWrappedPointTest();
 //void simpleLoggerTest();
 
 // Helpful documentaion: https://docs.gl/
-
-static void GLClearError() {
-	while (glGetError() != GL_NO_ERROR);
-}
-
-static bool GLLogCall(const char* function, const char* file, int line) {
-	bool noError = true;
-	while (GLenum error = glGetError()) {
-		std::cout << "[OpenGL Error] (0x" << std::hex << error << std::dec << ") " << function << " " << file << ":" << line << std::endl;
-		noError = false;
-	}
-	return noError;
-}
 
 static std::string readFile(const std::string& filepath) {
 	std::ifstream stream(filepath);
@@ -87,6 +73,10 @@ int main()
 		return -1;
 	}
 
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
 	/* Create a windows mode window and its OpenGL context */
 	window = glfwCreateWindow(640, 480, "Hello World", NULL, NULL);
 	if (!window) {
@@ -102,7 +92,7 @@ int main()
 	}
 
 	GLCall(std::cout << glGetString(GL_VERSION) << std::endl);
-
+	{
 	float positions[] = {
 		-0.5f, -0.5f,
 		 0.5f, -0.5f,
@@ -115,18 +105,16 @@ int main()
 		2, 3, 0
 	};
 
-	uint32_t buffer;
-	GLCall(glGenBuffers(1, &buffer));
-	GLCall(glBindBuffer(GL_ARRAY_BUFFER, buffer));
-	GLCall(glBufferData(GL_ARRAY_BUFFER, 4 * 2 * sizeof(float), positions, GL_STATIC_DRAW));
+	uint32_t vao;
+	GLCall(glGenVertexArrays(1, &vao));
+	GLCall(glBindVertexArray(vao));
+
+	VertexBuffer vb(positions, 4 * 2 * sizeof(float));
 
 	GLCall(glEnableVertexAttribArray(0));
 	GLCall(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), 0));
 
-	uint32_t ibo;
-	GLCall(glGenBuffers(1, &ibo));
-	GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo));
-	GLCall(glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(uint32_t), indices, GL_STATIC_DRAW));
+	IndexBuffer ib(indices, 6);
 
 	std::string vertexShader = readFile("res/shaders/Basic.vertex.glsl");
 
@@ -138,9 +126,12 @@ int main()
 	/* Loop until the user closes the window */
 	while (!glfwWindowShouldClose(window)) {
 		/* Render here */
-		glClear(GL_COLOR_BUFFER_BIT);
+		GLCall(glClear(GL_COLOR_BUFFER_BIT));
 
-		GLCall(glDrawElements(GL_TRIANGLES, 6, GL_INT, nullptr));
+		GLCall(glBindVertexArray(vao));
+		ib.Bind();
+
+		GLCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr));
 
 		/* Swap front and back buffers */
 		glfwSwapBuffers(window);
@@ -150,6 +141,7 @@ int main()
 	}
 
 	GLCall(glDeleteProgram(shader));
+}	
 
 	glfwTerminate();
 
