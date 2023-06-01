@@ -6,63 +6,19 @@
 #include <iostream>
 #include "Renderer.h"
 #include <GLFW/glfw3.h>
-#include <fstream>
-#include <sstream>
 
-#include "VertexBuffer.h"
+#include "ArrayBuffer.h"
 #include "IndexBuffer.h"
+#include "Shader.h"
+
+#include "glm/glm.hpp"
+#include "glm/gtc/matrix_transform.hpp"
 
 void simpleBitArrayTest();
 void simpleWrappedPointTest();
 //void simpleLoggerTest();
 
 // Helpful documentaion: https://docs.gl/
-
-static std::string readFile(const std::string& filepath) {
-	std::ifstream stream(filepath);
-
-	std::stringstream sstr;
-
-	while (stream >> sstr.rdbuf());
-
-	return sstr.str();
-}
-
-static uint32_t CompileShader(uint32_t type, const std::string& source) {
-	GLCall(uint32_t id = glCreateShader(type));
-	const char* src = source.c_str();
-	GLCall(glShaderSource(id, 1, &src, nullptr));
-	GLCall(glCompileShader(id));
-
-	int result;
-	GLCall(glGetShaderiv(id, GL_COMPILE_STATUS, &result));
-	if (result == GL_FALSE) {
-		int length;
-		GLCall(glGetShaderiv(id, GL_INFO_LOG_LENGTH, &length));
-		char* message = new char[length];
-		GLCall(glGetShaderInfoLog(id, length, &length, message));
-		std::cout << "Failed to compile " << (type == GL_VERTEX_SHADER ? "vertex" : "fragment") << "shader!" << std::endl;
-		std::cout << message << std::endl;
-	}
-
-	return id;
-}
-
-static uint32_t CreateShader(const std::string& vertexShader, const std::string& fragmentShader) {
-	GLCall(uint32_t program = glCreateProgram());
-	GLCall(uint32_t vs = CompileShader(GL_VERTEX_SHADER, vertexShader));
-	GLCall(uint32_t fs = CompileShader(GL_FRAGMENT_SHADER, fragmentShader));
-
-	GLCall(glAttachShader(program, vs));
-	GLCall(glAttachShader(program, fs));
-	GLCall(glLinkProgram(program));
-	GLCall(glValidateProgram(program));
-
-	GLCall(glDeleteShader(vs));
-	GLCall(glDeleteShader(fs));
-
-	return program;
-}
 
 int main()
 {
@@ -93,55 +49,80 @@ int main()
 
 	GLCall(std::cout << glGetString(GL_VERSION) << std::endl);
 	{
-	float positions[] = {
-		-0.5f, -0.5f,
-		 0.5f, -0.5f,
-		 0.5f,  0.5f,
-		-0.5f,  0.5f,
-	};
+		float basicPositions[] = {
+		     0.025f,  -0.975f,
+			 0.975f, -0.975f,
+			 0.975f, -0.025f,
+			 0.025f, -0.025f,
+		};
 
-	uint32_t indices[] = {
-		0, 1, 2,
-		2, 3, 0
-	};
+		float fullPositions[64];
 
-	uint32_t vao;
-	GLCall(glGenVertexArrays(1, &vao));
-	GLCall(glBindVertexArray(vao));
+		int idx = 0, offset = 0;
+		for (int i = 0; i < 8; i++) {
+			offset = i;
+			for (int j = 0; j < 8; j++) {
+				fullPositions[idx] = basicPositions[j] + (j % 2 == 0 ? offset : 0);
+				idx++;
+			}
+		}
 
-	VertexBuffer vb(positions, 4 * 2 * sizeof(float));
+		uint32_t basicIndices[] = {
+			0, 1, 2,
+			2, 3, 0,
+		};
 
-	GLCall(glEnableVertexAttribArray(0));
-	GLCall(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), 0));
+		uint32_t fullIndices[48];
 
-	IndexBuffer ib(indices, 6);
+		idx = 0;
+		for (int i = 0; i < 8; i++) {
+			for (int j = 0; j < 6; j++) {
+				fullIndices[idx] = basicIndices[j] + (i * 4);
+				idx++;
+			}
+		}
 
-	std::string vertexShader = readFile("res/shaders/Basic.vertex.glsl");
-
-	std::string fragmentShader = readFile("res/shaders/Basic.fragment.glsl");
-
-	uint32_t shader = CreateShader(vertexShader, fragmentShader);
-	GLCall(glUseProgram(shader));
-
-	/* Loop until the user closes the window */
-	while (!glfwWindowShouldClose(window)) {
-		/* Render here */
-		GLCall(glClear(GL_COLOR_BUFFER_BIT));
-
+		uint32_t vao;
+		GLCall(glGenVertexArrays(1, &vao));
 		GLCall(glBindVertexArray(vao));
-		ib.Bind();
 
-		GLCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr));
+		ArrayBuffer vb(fullPositions, 4 * 2 * 8 * sizeof(float), true);
 
-		/* Swap front and back buffers */
-		glfwSwapBuffers(window);
+		GLCall(glEnableVertexAttribArray(0));
+		GLCall(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), 0));
 
-		/* Poll for and process events */
-		glfwPollEvents();
+		IndexBuffer ib(fullIndices, 6 * 8);
+
+		glm::mat4 proj = glm::ortho(0.0f, 12.0f, 0.0f, -9.0f, -1.0f, 1.0f);
+
+		Shader shader("res/shaders/Basic.vertex.glsl", "res/shaders/Basic.fragment.glsl");
+		shader.Bind();
+
+		shader.SetUniformMat4f("u_MVP", proj);
+		shader.SetUniformUint("u_state", 0b01010101);
+
+		vb.Unbind();
+		ib.Unbind();
+		shader.Unbind();
+
+		/* Loop until the user closes the window */
+		while (!glfwWindowShouldClose(window)) {
+			/* Render here */
+			GLCall(glClear(GL_COLOR_BUFFER_BIT));
+
+			GLCall(glBindVertexArray(vao));
+			ib.Bind();
+			shader.Bind();
+
+			GLCall(glDrawElementsInstanced(GL_TRIANGLES, 6 * 8, GL_UNSIGNED_INT, nullptr, 8));
+
+			/* Swap front and back buffers */
+			glfwSwapBuffers(window);
+
+			/* Poll for and process events */
+			glfwPollEvents();
+		}
 	}
-
-	GLCall(glDeleteProgram(shader));
-}	
 
 	glfwTerminate();
 

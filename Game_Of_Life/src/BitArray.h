@@ -11,6 +11,7 @@ public:
 	bool get(uint32_t index) const;
 	void set(uint32_t index, bool value);
 	uint32_t size() const;
+	const uint8_t* getRaw() const { return m_bytes; };
 
 private:
 	uint8_t* m_bytes;

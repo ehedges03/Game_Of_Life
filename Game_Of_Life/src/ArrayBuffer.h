@@ -1,10 +1,10 @@
 #pragma once
 #include <stdint.h>
 
-class VertexBuffer {
+class ArrayBuffer {
 public:
-	VertexBuffer(const void* data, uint32_t size);
-	~VertexBuffer();
+	ArrayBuffer(const void* data, uint32_t size, bool isStatic);
+	~ArrayBuffer();
 
 	void Bind() const;
 	void Unbind() const;
