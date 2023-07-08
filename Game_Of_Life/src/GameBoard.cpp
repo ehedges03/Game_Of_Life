@@ -1,5 +1,6 @@
 #include "GameBoard.h"
 #include "Utils/WrappedPoint.h"
+#include "iostream"
 
 /*
 GameBoard method definitions
@@ -50,30 +51,50 @@ bool GameBoard::getPoint(int x, int y) {
 	return m_cells.get(xyToIndex(x, y));
 }
 
-uint32_t GameBoard::xyToIndex(int x, int y) {
+void GameBoard::updateBoard() {
+	for (uint32_t i = 0; i < c_chunksPerRow; i++) {
+		for (uint32_t j = 0; j < c_chunksPerRow; j++) {
+			m_chunks[i][j]->processChunk();
+		}
+	}
 
-	WrappedPoint wp({ x, y }, { c_sideLength, c_sideLength });
-	return wp.x() + wp.y() * c_sideLength;
-
+	for (uint32_t i = 0; i < c_chunksPerRow; i++) {
+		for (uint32_t j = 0; j < c_chunksPerRow; j++) {
+			m_chunks[i][j]->writeBorder();
+		}
+	}
 }
 
-uint8_t GameBoard::countNeighbors(uint32_t x, uint32_t y) {
+void GameBoard::printBoard() {
+	for (uint32_t i = 0; i < m_cells.size(); i++) {
+		if (i % c_sideLength == 0) {
+			std::cout << '\n';
+		}
+
+		std::cout << (m_cells.get(i) ? '@' : '-');
+	}
+}
+
+uint32_t GameBoard::xyToIndex(int x, int y) {
+	WrappedPoint wp({ x, y }, { c_sideLength, c_sideLength });
+	return wp.getOffset(0,0);
+}
+
+uint8_t GameBoard::countNeighbors(int x, int y) {
 	// Would it be faster or slower to check if the value is 4 to avoid checking all pixels
 	// The if statements could lead to a slower processing time
 
 	// counts neighbors row by row
 	uint8_t count = 0;
-	uint32_t leftPoint = xyToIndex(x - 1, y - 1);
-	count += m_cells.get(leftPoint);
-	count += m_cells.get(leftPoint + 1);
-	count += m_cells.get(leftPoint + 2);
-	leftPoint += c_sideLength;
-	count += m_cells.get(leftPoint);
-	count += m_cells.get(leftPoint + 2);
-	leftPoint += c_sideLength;
-	count += m_cells.get(leftPoint);
-	count += m_cells.get(leftPoint + 1);
-	return count + m_cells.get(leftPoint + 2);
+	WrappedPoint wp({ x, y }, { c_sideLength, c_sideLength });
+	count += m_cells.get(wp.getOffset(-1,-1));
+	count += m_cells.get(wp.getOffset(0,-1));
+	count += m_cells.get(wp.getOffset(1,-1));
+	count += m_cells.get(wp.getOffset(-1,0));
+	count += m_cells.get(wp.getOffset(1,0));
+	count += m_cells.get(wp.getOffset(-1,1));
+	count += m_cells.get(wp.getOffset(0,1));
+	return count + m_cells.get(wp.getOffset(1,1));
 }
 
 /*
@@ -93,6 +114,10 @@ bool GameBoard::Chunk::calcNextCellStatus(int x, int y) {
 	x += c_offsetX; y += c_offsetY;
 	bool alive = m_gb.getPoint(x, y);
 	uint8_t neighbors = m_gb.countNeighbors(x, y);
+
+	//if (neighbors > 0) {
+	//	std::cout << "\nx: " << x << " y: " << y << " count: " << (int)neighbors;
+	//}
 
 	return neighbors == 3 || (alive && neighbors == 2);
 }

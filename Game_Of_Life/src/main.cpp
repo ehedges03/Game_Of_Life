@@ -14,6 +14,49 @@ int main()
     simpleBitArrayTest();
     simpleWrappedPointTest();
     simpleLoggerTest();
+
+    uint16_t board[] = {
+        0b0010000000001000,
+        0b1010000000001000,
+        0b0110000000001000,
+        0b0000000000000000,
+        0b0000000000000000,
+        0b0000000000000000,
+        0b0000000000000000,
+        0b0000000000000000,
+        0b0000000000000000,
+        0b0000000000000000,
+        0b0000000000000000,
+        0b0000000000000000,
+        0b0000000000000000,
+        0b0000000000000000,
+        0b0000000000000000,
+        0b0000000000000000,
+    };
+
+    GameBoard gb(16, 2);
+
+    for (int i = 0; i < sizeof(board) / sizeof(uint16_t); i++) {
+        for (int j = 0; j < 16; j++) {
+            bool value = board[i] & 1 << (15 - j);
+
+            if (value) {
+                std::cout << "i: " << i << " j: " << j;
+            }
+
+            gb.setPoint(j, i, value);
+        }
+    }
+
+    std::cout << "Press 'Enter' to update board. Type 'q' and press enter to quit.";
+
+    while (true) {
+    gb.printBoard();
+    if (std::getchar() == 'q') return 0;
+
+    gb.updateBoard();
+    std::cout << "\033[33A";
+    }
 }
 
 void simpleBitArrayTest() {

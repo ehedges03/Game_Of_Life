@@ -17,6 +17,9 @@ public:
 	void setPoint(uint32_t x, uint32_t y, bool value);
 	bool getPoint(int x, int y);
 
+	void updateBoard();
+	void printBoard();
+
 	// TODO: returns the next status (alive/dead) of a point on the gameboard
 	// bool calcNextPointStatus(int x, int y);
 
@@ -32,7 +35,7 @@ private:
 	Chunk*** m_chunks;
 
 	// helper function used by nextPointStatus
-	uint8_t countNeighbors(uint32_t x, uint32_t y);
+	uint8_t countNeighbors(int x, int y);
 
 	uint32_t xyToIndex(int x, int y);
 };

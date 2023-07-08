@@ -11,7 +11,7 @@ BitArray::BitArray(uint32_t bits) {
 	}
 	m_byteSize = bytes;
 
-	m_bytes = new uint8_t[bytes];
+	m_bytes = new uint8_t[bytes]{0};
 }
 
 BitArray::~BitArray() {
