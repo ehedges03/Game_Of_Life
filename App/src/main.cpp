@@ -1,8 +1,8 @@
 #include "BitArray.h"
 #include "Utils/WrappedPoint.h"
 #include "GameBoard.h"
-#include <libFunni/log.h>
-#include <libFunni/pointtech.h>
+#include "LibFunni/log.h"
+#include "LibFunni/pointtech.h"
 #include <iostream>
 
 void simpleBitArrayTest();
@@ -50,7 +50,6 @@ void simpleWrappedPointTest() {
 }
 
 void simpleLoggerTest() {
-
     // only logd will function
     funni::Logger<true, false, false, false> logger("logtest");
 
@@ -62,5 +61,4 @@ void simpleLoggerTest() {
     logger.logi();
     logger.logw();
     logger.logi();
-
 }
