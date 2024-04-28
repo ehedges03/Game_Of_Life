@@ -14,7 +14,7 @@ int main() {
   simpleBitArrayTest();
   simpleWrappedPointTest();
   simpleGameBoardTest();
-  simpleLoggerTest();
+  // simpleLoggerTest();
 }
 
 void simpleBitArrayTest() {
@@ -41,15 +41,13 @@ void simpleGameBoardTest() {
   GameBoard test;
 
   std::cout << test << std::endl;
-  for (int i = 0; i < 64; i++) {
+  for (int i = 0; i < 256; i++) {
     for (int j = 0; j < 64; j++) {
       test.setPoint(i, j, (i + j) % 2);
     }
   }
   std::cout << test << std::endl;
-
-  std::cout << (test.getPoint(0, 0) ? "YAY IT WORKS" : "HAHA YOU DUMB FR")
-            << std::endl;
+  std::cin.get();
 }
 
 void simpleWrappedPointTest() {

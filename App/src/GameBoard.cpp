@@ -1,4 +1,5 @@
 #include "GameBoard.h"
+#include "Utils/Console.h"
 #include <iostream>
 
 /*
@@ -39,25 +40,45 @@ bool GameBoard::getPoint(int32_t x, int32_t y) {
 
 std::ostream &operator<<(std::ostream &o, GameBoard &g) {
   GameBoard::Chunk defaultEmpty(g, 0, 0);
+  Console::Screen::clear();
   std::cout << "Max X: " << g.m_maxX << std::endl;
   std::cout << "Min X: " << g.m_minX << std::endl;
   std::cout << "Max Y: " << g.m_maxY << std::endl;
   std::cout << "Min Y: " << g.m_minY << std::endl;
 
+  int x = 0, y = 0;
+
   for (int32_t i = g.m_minX; i <= g.m_maxX; i++) {
     for (int32_t j = g.m_maxY; j >= g.m_minY; j--) {
+      Console::Cursor::setPosition(1 + x * GameBoard::Chunk::Size, 1 + y * GameBoard::Chunk::Size);
       if (g.m_chunks.find({i, j}) != g.m_chunks.end()) {
-        std::cout << g.m_chunks.at({i, j}) << std::endl;
+        std::cout << g.m_chunks.at({i, j}) << std::flush;
       } else {
-        std::cout << defaultEmpty << std::endl;
+        std::cout << defaultEmpty << std::flush;
       }
+      x++;
     }
+    x = 0;
+    y++;
   }
-
-  o << "▓" << std::endl;
-  o << "░" << std::endl;
+  std::cout << std::endl;
   return o;
 }
+
+  std::ostream &operator<<(std::ostream &o, GameBoard::Chunk c) {
+    for (auto r : c.m_dataBuffer[c.m_currBuffer]) {
+      for (int i = 0; i < GameBoard::Chunk::Size; i++) {
+        if (r[i]) {
+          o << "▓";
+        } else {
+          o << " ";
+        }
+      }
+      Console::Cursor::down(1);
+      Console::Cursor::backward(GameBoard::Chunk::Size);
+    }
+    return o;
+  }
 
 uint8_t GameBoard::countNeighbors(uint32_t x, uint32_t y) {
   // Would it be faster or slower to check if the value is 4 to avoid checking

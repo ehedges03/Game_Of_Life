@@ -32,17 +32,20 @@ public:
  * Main gameboard structure for working with chunks and controlling the system.
  */
 class GameBoard {
+
 public:
   GameBoard() : m_chunks(){};
   void setPoint(int32_t x, int32_t y, bool value);
   bool getPoint(int32_t x, int32_t y);
 
   friend std::ostream &operator<<(std::ostream &o, GameBoard &g);
-private:
+
   /**
    * 64 x 64 block of bits for gameboard.
    */
   class Chunk;
+
+private:
   std::unordered_map<std::pair<int32_t, int32_t>, Chunk, PairHash> m_chunks;
   int32_t m_maxX = 0;
   int32_t m_minX = 0;
@@ -65,12 +68,7 @@ public:
 
   std::bitset<Size> &operator[](int32_t i);
 
-  friend std::ostream &operator<<(std::ostream &o, Chunk c) {
-    for (auto r : c.m_dataBuffer[c.m_currBuffer]) {
-      o << r << std::endl;
-    }
-    return o;
-  }
+  friend std::ostream &operator<<(std::ostream &o, Chunk c);
 
 private:
   GameBoard &m_gb;
