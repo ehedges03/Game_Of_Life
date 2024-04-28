@@ -1,159 +1,133 @@
 #include "GameBoard.h"
-#include "Utils/WrappedPoint.h"
+#include <iostream>
 
 /*
 GameBoard method definitions
 */
 
-GameBoard::GameBoard(uint32_t chunkSideSize, uint32_t chunksPerRow) :
-	m_cells(BitArray(chunkSideSize* chunkSideSize* chunksPerRow* chunksPerRow)),
-	c_sideLength(chunkSideSize* chunksPerRow), c_chunkWidth(chunkSideSize),
-	c_chunksPerRow(chunksPerRow) {
+void GameBoard::setPoint(int32_t x, int32_t y, bool value) {
+  std::pair<int32_t, int32_t> chunkKey{x / Chunk::Size, y / Chunk::Size};
 
-	uint32_t sideMax = chunkSideSize - 1;
+  if (m_chunks.find(chunkKey) == m_chunks.end()) {
+    // Dont create chunk if the value that will be set is false
+    if (!value) {
+      return;
+    }
 
-	m_variants[0] = { 0, 0, sideMax, sideMax, 1 };
-	m_variants[1] = { sideMax, 0, sideMax, 0, 0 };
-	m_variants[2] = { 0, sideMax, 0, sideMax, 1 };
-	m_variants[3] = { sideMax, sideMax, 0, 0, 0 };
+    // Chunk does not exist, construct it and insert into the map
+    Chunk chunk(*this, chunkKey.first, chunkKey.second);
+    m_chunks.insert({chunkKey, chunk});
+  }
 
-	uint32_t currX = 0;
-	uint32_t currY = 0;
-	m_chunks = new Chunk * *[chunksPerRow];
-	for (uint32_t i = 0; i < chunksPerRow; i++) {
-		m_chunks[i] = new Chunk * [chunksPerRow];
-		for (uint32_t j = 0; j < chunksPerRow; j++) {
-			// TODO: Should I instead just pass copies of the variant so it does not have to dereference
-			m_chunks[i][j] = new Chunk(*this, m_variants[(i % 2) * 2 + (j % 2)], currX, currY);
-			currX += chunkSideSize;
-		}
-		currX = 0;
-		currY += chunkSideSize;
-	}
+  Chunk &chunk = m_chunks.at(chunkKey);
+  chunk[x % Chunk::Size][y % Chunk::Size] = value;
+  m_maxX = std::max(chunkKey.first, m_maxX);
+  m_minX = std::min(chunkKey.first, m_minX);
+  m_maxY = std::max(chunkKey.second, m_maxY);
+  m_minY = std::min(chunkKey.second, m_minY);
 }
 
-GameBoard::~GameBoard() {
-	for (uint32_t i = 0; i < c_chunksPerRow; i++) {
-		for (uint32_t j = 0; j < c_chunksPerRow; j++) {
-			delete m_chunks[i][j];
-		}
-		delete m_chunks[i];
-	}
-	delete m_chunks;
+bool GameBoard::getPoint(int32_t x, int32_t y) {
+  std::pair<int32_t, int32_t> chunkKey{x / Chunk::Size, y / Chunk::Size};
+
+  if (m_chunks.find(chunkKey) != m_chunks.end()) {
+    return m_chunks.at(chunkKey)[x % Chunk::Size][y % Chunk::Size];
+  }
+
+  return false;
 }
 
-void GameBoard::setPoint(uint32_t x, uint32_t y, bool value) {
-	m_cells.set(xyToIndex(x, y), value);
-}
+std::ostream &operator<<(std::ostream &o, GameBoard &g) {
+  GameBoard::Chunk defaultEmpty(g, 0, 0);
+  std::cout << "Max X: " << g.m_maxX << std::endl;
+  std::cout << "Min X: " << g.m_minX << std::endl;
+  std::cout << "Max Y: " << g.m_maxY << std::endl;
+  std::cout << "Min Y: " << g.m_minY << std::endl;
 
-bool GameBoard::getPoint(int x, int y) {
-	return m_cells.get(xyToIndex(x, y));
-}
+  for (int32_t i = g.m_minX; i <= g.m_maxX; i++) {
+    for (int32_t j = g.m_maxY; j >= g.m_minY; j--) {
+      if (g.m_chunks.find({i, j}) != g.m_chunks.end()) {
+        std::cout << g.m_chunks.at({i, j}) << std::endl;
+      } else {
+        std::cout << defaultEmpty << std::endl;
+      }
+    }
+  }
 
-uint32_t GameBoard::xyToIndex(int x, int y) {
-
-	WrappedPoint wp({ x, y }, { c_sideLength, c_sideLength });
-	return wp.x() + wp.y() * c_sideLength;
-
+  o << "▓" << std::endl;
+  o << "░" << std::endl;
+  return o;
 }
 
 uint8_t GameBoard::countNeighbors(uint32_t x, uint32_t y) {
-	// Would it be faster or slower to check if the value is 4 to avoid checking all pixels
-	// The if statements could lead to a slower processing time
+  // Would it be faster or slower to check if the value is 4 to avoid checking
+  // all pixels The if statements could lead to a slower processing time
 
-	// counts neighbors row by row
-	uint8_t count = 0;
-	uint32_t leftPoint = xyToIndex(x - 1, y - 1);
-	count += m_cells.get(leftPoint);
-	count += m_cells.get(leftPoint + 1);
-	count += m_cells.get(leftPoint + 2);
-	leftPoint += c_sideLength;
-	count += m_cells.get(leftPoint);
-	count += m_cells.get(leftPoint + 2);
-	leftPoint += c_sideLength;
-	count += m_cells.get(leftPoint);
-	count += m_cells.get(leftPoint + 1);
-	return count + m_cells.get(leftPoint + 2);
+  // counts neighbors row by row
+  // uint8_t count = 0;
+  // uint32_t leftPoint = xyToIndex(x - 1, y - 1);
+  // count += m_cells.get(leftPoint);
+  // count += m_cells.get(leftPoint + 1);
+  // count += m_cells.get(leftPoint + 2);
+  // leftPoint += c_sideLength;
+  // count += m_cells.get(leftPoint);
+  // count += m_cells.get(leftPoint + 2);
+  // leftPoint += c_sideLength;
+  // count += m_cells.get(leftPoint);
+  // count += m_cells.get(leftPoint + 1);
+  // return count + m_cells.get(leftPoint + 2);
+  return 0;
 }
 
 /*
-Chunk method definitions
-*/
+ * Chunk method definitions
+ */
 
-GameBoard::Chunk::Chunk(GameBoard& gb, const Variant& variant, uint32_t offsetX, uint32_t offsetY) :
-	m_gb(gb),
-	c_offsetX(offsetX),
-	c_offsetY(offsetY),
-	m_variant(variant),
-	m_border(BitArray(gb.c_chunkWidth * 2)) {
-	std::cout << "X: " << offsetX << " Y: " << offsetY << " test: " << m_variant.ySide << ' ' << m_variant.xSide << '\n';
+GameBoard::Chunk::Chunk(GameBoard &gb, uint32_t x, uint32_t y)
+    : m_gb(gb), c_x(x), c_y(y) {
+  std::cout << "x: " << x << " y: " << y << std::endl;
 }
 
 bool GameBoard::Chunk::calcNextCellStatus(int x, int y) {
-	x += c_offsetX; y += c_offsetY;
-	bool alive = m_gb.getPoint(x, y);
-	uint8_t neighbors = m_gb.countNeighbors(x, y);
+  bool alive = m_gb.getPoint(x, y);
+  uint8_t neighbors = m_gb.countNeighbors(x, y);
 
-	return neighbors == 3 || (alive && neighbors == 2);
+  return neighbors == 3 || (alive && neighbors == 2);
 }
 
-void GameBoard::Chunk::processChunk() {
-	uint32_t maxwh = m_gb.c_chunkWidth;    // compiler will take this out and it cleans up the code a little
-	BitArray rowBuffers[2] = { BitArray(maxwh), BitArray(maxwh) };
-	uint8_t hotBuffer = 1;
-	uint32_t y, x;
+void GameBoard::Chunk::processNextState() {
+  uint8_t hotBuffer = 1;
+  uint32_t y, x;
+  std::array<std::bitset<Chunk::Size>, 2> buffers;
 
-	// put the first row into the buffer
-	for (x = 0; x < maxwh; x++) {
-		rowBuffers[0].set(x, calcNextCellStatus(x, 0));
-	}
+  // put the first row into the buffer
+  for (x = 0; x < Chunk::Size; x++) {
+    buffers[0][x] = calcNextCellStatus(x, 0);
+  }
 
-	for (y = 0; y < maxwh; y++) {
-		// write upcoming line into the buffer (y+1)
-		if ((y + 1) < maxwh) {
-			for (x = 0; x < maxwh; x++) {
-				rowBuffers[hotBuffer].set(x, calcNextCellStatus(x, y + 1));
-			}
-		}
+  for (y = 0; y < Chunk::Size; y++) {
+    // write upcoming line into the buffer (y+1)
+    if ((y + 1) < Chunk::Size) {
+      for (x = 0; x < Chunk::Size; x++) {
+        buffers[hotBuffer][x] = calcNextCellStatus(x, y + 1);
+      }
+    }
 
-		hotBuffer ^= 1;    // switch active buffer before writing 
+    hotBuffer ^= 1; // switch active buffer before writing
 
-		// write hot buffer the the board (y)
-		for (x = 0; x < maxwh; x++) {
-			bool value = rowBuffers[hotBuffer].get(x);
-			if (!addedToBorderBuffer(x, y, value)) {
-				m_gb.setPoint(x + c_offsetX, y + c_offsetY, value);
-			}
-		}
-		// row y is written to the board
-	}
+    // write hot buffer the the board (y)
+    for (x = 0; x < Chunk::Size; x++) {
+      bool value = buffers[hotBuffer][x];
+      //  if (!addedToBorderBuffer(x, y, value)) {
+      //    m_gb.setPoint(x + c_offsetX, y + c_offsetY, value);
+      //  }
+    }
+    // row y is written to the board
+  }
 }
 
-void GameBoard::Chunk::writeBorder() {
-	uint32_t i;
-	for (i = 0; i < m_gb.c_chunkWidth; i++) {
-		m_gb.setPoint(i + c_offsetX, m_variant.ySide + c_offsetY, m_border.get(i));
-	}
-	for (; i < m_border.size() - 1; i++) {
-		m_gb.setPoint(m_variant.xSide + c_offsetX, i - m_gb.c_chunkWidth + m_variant.offset, m_border.get(i));
-	}
-	m_gb.setPoint(m_variant.xCorner + c_offsetX, m_variant.yCorner + c_offsetY, m_border.get(i));
-}
+void GameBoard::Chunk::nextState() { m_currBuffer ^= 1; }
 
-bool GameBoard::Chunk::addedToBorderBuffer(int x, int y, bool value) {
-	bool added = false;
-	if (y == m_variant.ySide) {
-		m_border.set(x, value);
-		added = true;
-	}
-	else if (x == m_variant.xSide) {
-		m_border.set(y + m_gb.c_chunkWidth - m_variant.offset, value);
-		added = true;
-	}
-	else if (x == m_variant.xCorner && y == m_variant.yCorner) {
-		m_border.set(m_gb.c_chunkWidth * 2 - 1, value);
-		added = true;
-	}
-
-	return added;
+std::bitset<GameBoard::Chunk::Size> &GameBoard::Chunk::operator[](int32_t i) {
+  return m_dataBuffer[m_currBuffer][i];
 }

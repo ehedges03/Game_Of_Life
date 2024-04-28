@@ -11,7 +11,7 @@ endif
 .PHONY: clean prebuild
 
 SHELLTYPE := posix
-ifeq ($(shell echo "test"), "test")
+ifeq (.exe,$(findstring .exe,$(ComSpec)))
 	SHELLTYPE := msdos
 endif
 
@@ -27,7 +27,6 @@ endif
 ifeq ($(origin AR), default)
   AR = ar
 endif
-RESCOMP = windres
 INCLUDES += -Isrc -I../Libraries/src
 FORCE_INCLUDE +=
 ALL_CPPFLAGS += $(CPPFLAGS) -MD -MP $(DEFINES) $(INCLUDES)
