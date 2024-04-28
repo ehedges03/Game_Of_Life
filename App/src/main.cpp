@@ -41,9 +41,9 @@ void simpleGameBoardTest() {
   GameBoard test;
 
   std::cout << test << std::endl;
-  for (int i = 0; i < 256; i++) {
-    for (int j = 0; j < 64; j++) {
-      test.setPoint(i, j, (i + j) % 2);
+  for (int x = 0; x < 256; x++) {
+    for (int y = 0; y < 64; y++) {
+      test.setPoint(x, y, y == 32 || x == 128 || (y+x) % 2);
     }
   }
   std::cout << test << std::endl;

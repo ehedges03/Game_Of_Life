@@ -21,7 +21,7 @@ void GameBoard::setPoint(int32_t x, int32_t y, bool value) {
   }
 
   Chunk &chunk = m_chunks.at(chunkKey);
-  chunk[x % Chunk::Size][y % Chunk::Size] = value;
+  chunk[(Chunk::Size - 1) - (y % Chunk::Size)][x % Chunk::Size] = value;
   m_maxX = std::max(chunkKey.first, m_maxX);
   m_minX = std::min(chunkKey.first, m_minX);
   m_maxY = std::max(chunkKey.second, m_maxY);
@@ -41,16 +41,12 @@ bool GameBoard::getPoint(int32_t x, int32_t y) {
 std::ostream &operator<<(std::ostream &o, GameBoard &g) {
   GameBoard::Chunk defaultEmpty(g, 0, 0);
   Console::Screen::clear();
-  std::cout << "Max X: " << g.m_maxX << std::endl;
-  std::cout << "Min X: " << g.m_minX << std::endl;
-  std::cout << "Max Y: " << g.m_maxY << std::endl;
-  std::cout << "Min Y: " << g.m_minY << std::endl;
-
   int x = 0, y = 0;
 
   for (int32_t i = g.m_minX; i <= g.m_maxX; i++) {
     for (int32_t j = g.m_maxY; j >= g.m_minY; j--) {
-      Console::Cursor::setPosition(1 + x * GameBoard::Chunk::Size, 1 + y * GameBoard::Chunk::Size);
+      Console::Cursor::setPosition(1 + x * GameBoard::Chunk::Size,
+                                   1 + y * GameBoard::Chunk::Size);
       if (g.m_chunks.find({i, j}) != g.m_chunks.end()) {
         std::cout << g.m_chunks.at({i, j}) << std::flush;
       } else {
@@ -65,20 +61,20 @@ std::ostream &operator<<(std::ostream &o, GameBoard &g) {
   return o;
 }
 
-  std::ostream &operator<<(std::ostream &o, GameBoard::Chunk c) {
-    for (auto r : c.m_dataBuffer[c.m_currBuffer]) {
-      for (int i = 0; i < GameBoard::Chunk::Size; i++) {
-        if (r[i]) {
-          o << "▓";
-        } else {
-          o << " ";
-        }
+std::ostream &operator<<(std::ostream &o, GameBoard::Chunk c) {
+  for (auto r : c.m_dataBuffer[c.m_currBuffer]) {
+    for (int i = 0; i < GameBoard::Chunk::Size; i++) {
+      if (r[i]) {
+        o << "▓";
+      } else {
+        o << "0";
       }
-      Console::Cursor::down(1);
-      Console::Cursor::backward(GameBoard::Chunk::Size);
     }
-    return o;
+    Console::Cursor::down(1);
+    Console::Cursor::backward(GameBoard::Chunk::Size);
   }
+  return o;
+}
 
 uint8_t GameBoard::countNeighbors(uint32_t x, uint32_t y) {
   // Would it be faster or slower to check if the value is 4 to avoid checking
