@@ -7,7 +7,20 @@ GameBoard method definitions
 */
 
 void GameBoard::setPoint(int32_t x, int32_t y, bool value) {
-  std::pair<int32_t, int32_t> chunkKey{x / Chunk::Size, y / Chunk::Size};
+  int32_t realChunkX, realChunkY;
+  if (x >= 0) {
+    realChunkX = x / Chunk::Size;
+  } else {
+    realChunkX = -1 + ((x + 1) / Chunk::Size);
+  }
+
+  if (y >= 0) {
+    realChunkY = y / Chunk::Size;
+  } else {
+    realChunkY = -1 + ((y + 1) / Chunk::Size);
+  }
+
+  std::pair<int32_t, int32_t> chunkKey{realChunkX, realChunkY};
 
   if (m_chunks.find(chunkKey) == m_chunks.end()) {
     // Dont create chunk if the value that will be set is false
@@ -21,7 +34,22 @@ void GameBoard::setPoint(int32_t x, int32_t y, bool value) {
   }
 
   Chunk &chunk = m_chunks.at(chunkKey);
-  chunk[(Chunk::Size - 1) - (y % Chunk::Size)][x % Chunk::Size] = value;
+
+  int32_t properX, properY;
+
+  if (x >= 0) {
+    properX = x % Chunk::Size;
+  } else {
+    properX = (Chunk::Size - 1) + ((x + 1) % Chunk::Size);
+  }
+
+  if (y >= 0) {
+    properY = (Chunk::Size - 1) - ((y + 1) % Chunk::Size);
+  } else {
+    properY = -(y % Chunk::Size);
+  }
+
+  chunk[properY][properX] = value;
   m_maxX = std::max(chunkKey.first, m_maxX);
   m_minX = std::min(chunkKey.first, m_minX);
   m_maxY = std::max(chunkKey.second, m_maxY);
@@ -100,7 +128,7 @@ uint8_t GameBoard::countNeighbors(uint32_t x, uint32_t y) {
  * Chunk method definitions
  */
 
-GameBoard::Chunk::Chunk(GameBoard &gb, uint32_t x, uint32_t y)
+GameBoard::Chunk::Chunk(GameBoard &gb, int32_t x, int32_t y)
     : m_gb(gb), c_x(x), c_y(y) {
   std::cout << "x: " << x << " y: " << y << std::endl;
 }

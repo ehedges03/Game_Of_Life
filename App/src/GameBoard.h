@@ -60,7 +60,7 @@ class GameBoard::Chunk {
 
 public:
   static constexpr int32_t Size = 16;
-  Chunk(GameBoard &gb, uint32_t x, uint32_t y);
+  Chunk(GameBoard &gb, int32_t x, int32_t y);
 
   bool calcNextCellStatus(int32_t x, int32_t y);
   void processNextState();
@@ -75,6 +75,6 @@ private:
   std::array<std::array<std::bitset<Size>, Size>, 2> m_dataBuffer;
   uint32_t m_currBuffer = 0;
 
-  const uint32_t c_x;
-  const uint32_t c_y;
+  const int32_t c_x;
+  const int32_t c_y;
 };
