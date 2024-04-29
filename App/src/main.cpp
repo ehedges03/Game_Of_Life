@@ -1,7 +1,6 @@
 #include "BitArray.h"
 #include "GameBoard.h"
 #include "LibFunni/log.h"
-#include "LibFunni/pointtech.h"
 #include "Utils/WrappedPoint.h"
 #include <iostream>
 
@@ -18,7 +17,7 @@ int main() {
 }
 
 void simpleBitArrayTest() {
-  BitArray mybits = BitArray(9);
+  BitArray mybits(9);
 
   std::cout << mybits << '\n';
 
@@ -41,8 +40,8 @@ void simpleGameBoardTest() {
   GameBoard test;
 
   std::cout << test << std::endl;
-  for (int x = -128; x < 128; x++) {
-    for (int y = -32; y < 32; y++) {
+  for (int x = -64; x < 64; x++) {
+    for (int y = -16; y < 16; y++) {
       test.setPoint(x, y, x < 0 || y < 0 || (x + y) % 2);
     }
   }

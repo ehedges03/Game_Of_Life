@@ -3,109 +3,76 @@
 #include <iostream>
 #include <string>
 
-// TODO: super unfinished, need to verify the behavior of this juvenile metaprogramming monstrosity
+// TODO: super unfinished, need to verify the behavior of this juvenile
+// metaprogramming monstrosity
 namespace funni {
 
-	// class selects from one of two explicit template instantiations of an implementation 
-	// for each public method used for generating a log event
-	// I... think this is all compile time and therefore when a stub is selected it can be
-	// excluded from the binary by optimization
+// class selects from one of two explicit template instantiations of an
+// implementation for each public method used for generating a log event I...
+// think this is all compile time and therefore when a stub is selected it can
+// be excluded from the binary by optimization
 
-	template <bool enD, bool enI, bool enW, bool enE>
-	class Logger {
-	public:
-		Logger(const std::string& tag) {
-			m_tag = tag;
-		}
-		~Logger() = default;
+template <bool enD, bool enI, bool enW, bool enE> class Logger {
+public:
+  Logger(const std::string &tag) { m_tag = tag; }
+  ~Logger() = default;
 
-		Logger(const Logger&) = delete;
-		const Logger& operator=(const Logger&) = delete;
+  Logger(const Logger &) = delete;
+  const Logger &operator=(const Logger &) = delete;
 
-		bool Start() {
+  bool Start() {
 
-			std::cout << "testing logging STARTED" << '\n';
-			// TODO: launch a new process that writes logs to shell/file
-			return true;
+    std::cout << "testing logging STARTED" << '\n';
+    // TODO: launch a new process that writes logs to shell/file
+    return true;
+  }
 
-		}
+  void logd() { ilogd<enD>(); }
 
-		void logd() {
-			ilogd<enD>();
-		}
+  void logi() { ilogi<enI>(); }
 
-		void logi() {
-			ilogi<enI>();
-		}
+  void logw() { ilogw<enW>(); }
 
-		void logw() {
-			ilogw<enW>();
-		}
+  void loge() { iloge<enE>(); }
 
-		void loge() {
-			iloge<enE>();
-		}
+private:
+  std::string m_tag;
 
-	private:
+  // debug
+  template <bool en> void ilogd();
 
-		std::string m_tag;
+  template <> void ilogd<true>() { std::cout << "testing logging d" << '\n'; }
 
-		// debug 
-		template <bool en>
-		void ilogd();
+  template <> void ilogd<false>() {
+    // no-op
+  }
 
-		template <>
-		void ilogd<true>() {
-			std::cout << "testing logging d" << '\n';
-		}
+  // info
+  template <bool en> void ilogi();
 
-		template <>
-		void ilogd<false>() {
-			// no-op
-		}
+  template <> void ilogi<true>() { std::cout << "testing logging i" << '\n'; }
 
-		// info 
-		template <bool en>
-		void ilogi();
+  template <> void ilogi<false>() {
+    // no-op
+  }
 
-		template <>
-		void ilogi<true>() {
-			std::cout << "testing logging i" << '\n';
-		}
+  // warning
+  template <bool en> void ilogw();
 
-		template <>
-		void ilogi<false>() {
-			// no-op
-		}
+  template <> void ilogw<true>() { std::cout << "testing logging w" << '\n'; }
 
-		// warning 
-		template <bool en>
-		void ilogw();
+  template <> void ilogw<false>() {
+    // no-op
+  }
 
-		template <>
-		void ilogw<true>() {
-			std::cout << "testing logging w" << '\n';
-		}
+  // error
+  template <bool en> void iloge();
 
-		template <>
-		void ilogw<false>() {
-			// no-op
-		}
+  template <> void iloge<true>() { std::cout << "testing logging e" << '\n'; }
 
-		// error 
-		template <bool en>
-		void iloge();
+  template <> void iloge<false>() {
+    // no-op
+  }
+};
 
-		template <>
-		void iloge<true>() {
-			std::cout << "testing logging e" << '\n';
-		}
-
-		template <>
-		void iloge<false>() {
-			// no-op
-		}
-
-	};
-
-}
+} // namespace funni
