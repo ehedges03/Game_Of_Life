@@ -2,6 +2,7 @@
 #include "GameBoard.h"
 #include "LibFunni/log.h"
 #include "Utils/WrappedPoint.h"
+#include <chrono>
 #include <iostream>
 
 void simpleBitArrayTest();
@@ -38,15 +39,38 @@ void simpleBitArrayTest() {
 
 void simpleGameBoardTest() {
   GameBoard test;
+  char input;
 
-  std::cout << test << std::endl;
   for (int x = -64; x < 64; x++) {
-    for (int y = -16; y < 16; y++) {
-      test.setPoint(x, y, x < 0 || y < 0 || (x + y) % 2);
+    for (int y = -32; y < 32; y++) {
+      test.setPoint(x, y, (x + y) % 2);
     }
   }
+  uint8_t testByte = 0xFF;
   std::cout << test << std::endl;
-  std::cin.get();
+  std::cin.get(input);
+
+  double lastTimeMS = 0, totalTimeMS = 0;
+  int runs = 0;
+
+  while (input != 'q') {
+    auto start = std::chrono::steady_clock::now();
+    test.update();
+    auto end = std::chrono::steady_clock::now();
+
+    lastTimeMS =
+        std::chrono::duration_cast<std::chrono::microseconds>(end - start)
+            .count() /
+        1000.0f;
+    totalTimeMS += lastTimeMS;
+    runs++;
+
+    std::cout << test << std::flush;
+    std::cout << "Last run time: " << lastTimeMS
+              << " ms | Total run time: " << (totalTimeMS / runs) << " ms"
+              << std::endl;
+    std::cin.get(input);
+  }
 }
 
 void simpleWrappedPointTest() {
