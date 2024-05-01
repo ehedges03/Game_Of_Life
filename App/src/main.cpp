@@ -1,11 +1,13 @@
 #include "BitArray.h"
 #include "GameBoard.h"
 #include "LibFunni/log.h"
+#include "Utils/Console.h"
 #include "Utils/WrappedPoint.h"
 #include <chrono>
 #include <iostream>
 
 void simpleBitArrayTest();
+void simpleChunkTest();
 void simpleGameBoardTest();
 void simpleWrappedPointTest();
 void simpleLoggerTest();
@@ -13,8 +15,9 @@ void simpleLoggerTest();
 int main() {
   simpleBitArrayTest();
   simpleWrappedPointTest();
+  simpleChunkTest();
   simpleGameBoardTest();
-  // simpleLoggerTest();
+  simpleLoggerTest();
 }
 
 void simpleBitArrayTest() {
@@ -37,17 +40,58 @@ void simpleBitArrayTest() {
   std::cout << mybits << '\n';
 }
 
-void simpleGameBoardTest() {
-  GameBoard test;
+// clang-format off
+constexpr std::array<std::bitset<16>, 16> chunkStart = {
+    0b0000000000000000, 
+    0b0000000000000000, 
+    0b0000000000000000,
+    0b0000000000000000, 
+    0b0110000000000000, 
+    0b0110000000000000,
+    0b0000000000000000, 
+    0b0000000000000000, 
+    0b0000000000000000,
+    0b0000000000000000, 
+    0b0000000000000000, 
+    0b0000000000000000,
+    0b0000000000000000, 
+    0b0000000000000000, 
+    0b0000000000000000,
+    0b0000000000000000,
+};
+// clang-format on
+
+void simpleChunkTest() {
+  Chunk<16> c;
   char input;
 
-  for (int x = -64; x < 64; x++) {
-    for (int y = -32; y < 32; y++) {
-      test.setPoint(x, y, (x + y) % 2);
+  Console::Screen::clear();
+  Console::Cursor::setPosition(0, 0);
+  std::cout << c << std::endl;
+  std::cin.get(input);
+
+  while (input != 'q') {
+    c.processNextState();
+    c.swapToNextState();
+
+    Console::Screen::clear();
+    Console::Cursor::setPosition(0, 0);
+    std::cout << c << std::endl;
+    std::cin.get(input);
+  }
+}
+
+void simpleGameBoardTest() {
+  GameBoard gb;
+  char input;
+
+  for (int x = -32; x < 32; x++) {
+    for (int y = -16; y < 16; y++) {
+      gb.setPoint(x, y, (x + y) % 2);
     }
   }
   uint8_t testByte = 0xFF;
-  std::cout << test << std::endl;
+  std::cout << gb << std::endl;
   std::cin.get(input);
 
   double lastTimeMS = 0, totalTimeMS = 0;
@@ -55,7 +99,7 @@ void simpleGameBoardTest() {
 
   while (input != 'q') {
     auto start = std::chrono::steady_clock::now();
-    test.update();
+    gb.update();
     auto end = std::chrono::steady_clock::now();
 
     lastTimeMS =
@@ -65,7 +109,7 @@ void simpleGameBoardTest() {
     totalTimeMS += lastTimeMS;
     runs++;
 
-    std::cout << test << std::flush;
+    std::cout << gb << std::flush;
     std::cout << "Last run time: " << lastTimeMS
               << " ms | Total run time: " << (totalTimeMS / runs) << " ms"
               << std::endl;
