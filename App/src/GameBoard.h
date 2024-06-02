@@ -33,24 +33,24 @@ public:
 /**
  * 64 x 64 block of bits for gameboard.
  */
-template <uint32_t size> class Chunk;
+class Chunk;
 
 /**
  * Main gameboard structure for working with chunks and controlling the system.
  */
-template <uint32_t ChunkSize = 64> class GameBoard {
+class GameBoard {
 public:
   void setPoint(int32_t x, int32_t y, bool value);
   bool getPoint(int32_t x, int32_t y);
 
   void update();
 
-  friend std::ostream &operator<<(std::ostream &o, GameBoard<ChunkSize> &g);
+  friend std::ostream &operator<<(std::ostream &o, GameBoard &g);
 
 private:
-  friend class Chunk<ChunkSize>;
+  friend class Chunk;
 
-  std::unordered_map<std::pair<int32_t, int32_t>, Chunk<ChunkSize>, PairHash>
+  std::unordered_map<std::pair<int32_t, int32_t>, Chunk, PairHash>
       m_chunks;
 
   int32_t m_maxX = 0;
@@ -58,14 +58,14 @@ private:
   int32_t m_maxY = 0;
   int32_t m_minY = 0;
 
-  std::optional<std::reference_wrapper<Chunk<ChunkSize>>> getChunk(int32_t x,
-                                                                   int32_t y);
-  Chunk<ChunkSize> &getOrMakeChunk(int32_t x, int32_t y);
+  std::optional<std::reference_wrapper<Chunk>> getChunk(int32_t x, int32_t y);
+  Chunk &getOrMakeChunk(int32_t x, int32_t y);
 };
 
-template <uint32_t Size> class Chunk {
+class Chunk {
 
 public:
+  static constexpr uint32_t Size = 32;
   Chunk() {};
 
   struct Border {
@@ -100,7 +100,7 @@ public:
   iterator end() { return m_dataBuffer[m_currBuffer].end(); };
   const_iterator end() const { return m_dataBuffer[m_currBuffer].end(); };
 
-  friend std::ostream &operator<<(std::ostream &o, Chunk<Size> c);
+  friend std::ostream &operator<<(std::ostream &o, Chunk c);
 
 private:
   std::array<std::array<std::bitset<Size>, Size>, 2> m_dataBuffer;

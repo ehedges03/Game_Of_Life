@@ -62,7 +62,7 @@ constexpr std::array<std::bitset<16>, 16> chunkStart = {
 // clang-format on
 
 void simpleChunkTest() {
-  Chunk<16> c;
+  Chunk c;
   char input;
 
   Console::Screen::clear();
