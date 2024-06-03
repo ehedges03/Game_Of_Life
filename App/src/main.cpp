@@ -83,8 +83,8 @@ void simpleGameBoardTest() {
   GameBoard gb;
   char input;
 
-  for (int y = 0; y < 32; y += 4) {
-    for (int x = 0; x < 32; x+= 4) {
+  for (int y = 0; y < 48; y += 4) {
+    for (int x = 0; x < 64; x+= 4) {
       gb.setPoint(x, y, true);
       gb.setPoint(x, y, false);
     }

@@ -4,8 +4,8 @@
 #include <iostream>
 #include <utility>
 
-static std::bitset<512> createBitsToStateMap() {
-  std::bitset<512> map;
+static const std::array<bool, 512> createBitsToStateMap() {
+  std::array<bool, 512> map;
   for (int16_t i = 0; i <= 0b111111111; i++) {
     uint8_t neighbor_count = 0;
     int16_t neighbors = i & 0b111101111;
@@ -23,7 +23,7 @@ static std::bitset<512> createBitsToStateMap() {
   return map;
 }
 
-static std::bitset<512> bitsToState = createBitsToStateMap();
+static const std::array<bool, 512> bitsToState = createBitsToStateMap();
 
 /*
 GameBoard method definitions
@@ -342,18 +342,20 @@ void Chunk::processNextState() {
   uint64_t top = m_data[Chunk::Size + 1];
 
   for (int y = Chunk::Size; y > 0; y--) {
-    uint64_t curr = 0;
-    for (int x = 0; x < Chunk::Size; x++) {
+    uint64_t newVals = 0;
+    uint64_t curr = m_data[y];
+    uint64_t bot = m_data[y - 1];
+    for (int x = Chunk::Size - 1; x >= 0; x--) {
       uint32_t around = 0;
 
       // Top 3 bits
-      around |= ((top >> ((Chunk::Size - 1) - x)) & 0b111) << 6;
+      around |= ((top >> x) & 0b111) << 6;
 
       // Middle 3 bits
-      around |= ((m_data[y] >> ((Chunk::Size - 1) - x)) & 0b111) << 3;
+      around |= ((curr >> x) & 0b111) << 3;
 
       // Bottom 3 bits
-      around |= (m_data[y - 1] >> ((Chunk::Size - 1) - x)) & 0b111;
+      around |= (bot >> x) & 0b111;
 
       // std::cout << "(" << x << "," << (y - 1) << ") -> "
       //           << std::bitset<3>(around >> 6) << " "
@@ -361,13 +363,13 @@ void Chunk::processNextState() {
       //           << " -> " << bitsToState[around]
       //           << std::endl;
 
-      curr |= bitsToState[around];
-      curr <<= 1;
+      newVals |= bitsToState[around];
+      newVals <<= 1;
     }
     // std::cout << std::bitset<Chunk::Size>(curr) << std::endl;
 
     top = m_data[y];
-    m_data[y] = curr;
+    m_data[y] = newVals;
   }
 }
 
