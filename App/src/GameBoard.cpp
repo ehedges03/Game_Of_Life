@@ -42,12 +42,14 @@ void GameBoard::setPoint(int32_t x, int32_t y, bool value) {
   }
 
   if (y >= 0) {
-    properY = (Chunk::Size - 1) - ((y) % Chunk::Size);
+    properY = y % Chunk::Size;
+    // properY = (Chunk::Size - 1) - ((y) % Chunk::Size);
   } else {
-    properY = -((y + 1) % Chunk::Size);
+    // properY = -((y + 1) % Chunk::Size);
+    properY = (Chunk::Size - 1) + ((y + 1) % Chunk::Size);
   }
 
-  chunk->setCell(properY, properX, value);
+  chunk->setCell(properX, properY, value);
   checkChunk(key, chunk);
 }
 
@@ -229,27 +231,32 @@ std::shared_ptr<Chunk> GameBoard::getOrMakeChunk(ChunkKey key) {
 std::ostream &operator<<(std::ostream &o, GameBoard &g) {
   Chunk defaultEmpty;
   Console::Screen::clear();
-  int x = 0, y = 0;
+  Console::Cursor::setPosition(0, 0);
 
-  for (int32_t i = g.m_minX; i <= g.m_maxX; i++) {
-    for (int32_t j = g.m_maxY; j >= g.m_minY; j--) {
-      Console::Cursor::setPosition(1 + x * Chunk::Size, 1 + y * Chunk::Size);
-      if (g.m_chunks.find({i, j}) != g.m_chunks.end()) {
-        o << g.m_chunks.at({i, j}) << std::flush;
+  for (int32_t y = g.m_maxY; y >= g.m_minY; y--) {
+    for (int32_t x = g.m_minX; x <= g.m_maxX; x++) {
+      if (g.m_chunks.find({x, y}) != g.m_chunks.end()) {
+        o << *g.m_chunks.at({x, y}) << std::flush;
       } else {
         o << defaultEmpty << std::flush;
       }
-      x++;
-      y++;
+      Console::Cursor::up(Chunk::Size);
+      Console::Cursor::forward(Chunk::Size);
     }
+    Console::Cursor::down(Chunk::Size - 1);
+    std::cout << std::endl;
   }
   o << std::endl;
+
+  o << "X: " << g.m_minX << "-" << g.m_maxX << " | Y: " << g.m_minY << "-"
+    << g.m_maxY << std::endl;
+  o << "Total Chunks: " << g.m_chunks.size() << std::endl;
 
   return o;
 }
 
 std::ostream &operator<<(std::ostream &o, Chunk &c) {
-  for (int32_t y = 32; y > 0; y++) {
+  for (int32_t y = Chunk::Size; y > 0; y--) {
     std::bitset<Chunk::Size> row((c.m_data[y] & Chunk::DataBits) >> 1);
     for (int x = Chunk::Size - 1; x >= 0; x--) {
       if (row[x]) {

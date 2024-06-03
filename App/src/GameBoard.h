@@ -97,7 +97,7 @@ public:
 
   // I think this should size should be 6 bits under the type used in m_data for
   // each row.
-  static constexpr uint32_t Size = 32;
+  static constexpr uint32_t Size = 16;
   static constexpr uint64_t LeftBorderBit = 1ul << (Size + 1);
   static constexpr uint64_t RightBorderBit = 1ul;
   static constexpr uint64_t DataBits = ((1ul << Size) - 1) << 1;
@@ -134,6 +134,6 @@ public:
   friend std::ostream &operator<<(std::ostream &o, Chunk &c);
 
 private:
-  Actions m_actions;
-  std::array<uint64_t, Size + 2> m_data;
+  Actions m_actions = NOTHING;
+  std::array<uint64_t, Size + 2> m_data {};
 };
