@@ -76,17 +76,6 @@ private:
 
 class Chunk {
 public:
-  enum Actions {
-    /** This chunk can be processed as normal */
-    NOTHING,
-    /** Chunk is empty and all surrounding chunks are empty so this chunk should
-       be deleted */
-    DELETE_CHUNK,
-    /** This chunk is not empty and there exist border chunks that are
-       non-existent so create them */
-    SPAWN_BORDERS,
-  };
-
   std::shared_ptr<Chunk> upLeft;
   std::shared_ptr<Chunk> up;
   std::shared_ptr<Chunk> upRight;
@@ -98,19 +87,17 @@ public:
 
   // I think this should size should be 6 bits under the type used in m_data for
   // each row.
-  static constexpr int32_t Size = 16;
+  static constexpr int32_t Size = 8;
   static constexpr uint64_t LeftBorderBit = 1ul << (Size + 1);
   static constexpr uint64_t RightBorderBit = 1ul;
   static constexpr uint64_t DataBits = ((1ul << Size) - 1) << 1;
 
   void processNextState();
+  void readInBorder();
   bool empty();
 
   bool getCell(int32_t x, int32_t y);
   void setCell(int32_t x, int32_t y, bool val);
-
-  Actions getActions() { return m_actions; }
-  void clearActions() { m_actions = NOTHING; }
 
   using iterator = typename std::array<uint64_t, Size + 2>::iterator;
   using reverse_iterator =
@@ -135,6 +122,5 @@ public:
   friend std::ostream &operator<<(std::ostream &o, Chunk &c);
 
 private:
-  Actions m_actions = NOTHING;
   std::array<uint64_t, Size + 2> m_data {};
 };

@@ -5,6 +5,7 @@
 #include "Utils/WrappedPoint.h"
 #include <chrono>
 #include <iostream>
+#include <bitset>
 
 void simpleBitArrayTest();
 void simpleChunkTest();
@@ -15,7 +16,7 @@ void simpleLoggerTest();
 int main() {
   simpleBitArrayTest();
   simpleWrappedPointTest();
-  // simpleChunkTest();
+  simpleChunkTest();
   simpleGameBoardTest();
   simpleLoggerTest();
 }
@@ -41,23 +42,31 @@ void simpleBitArrayTest() {
 }
 
 // clang-format off
-constexpr std::array<uint16_t, 16> chunkStart = {
-    0b0000000000000000, 
-    0b0000000000000000, 
-    0b0000000000000000,
-    0b0000000000000000, 
-    0b0110000000000000, 
-    0b0110000000000000,
-    0b0000000000000000, 
-    0b0000000000000000, 
-    0b0000000000000000,
-    0b0000000000000000, 
-    0b0000000000000000, 
-    0b0000000000000000,
-    0b0000000000000000, 
-    0b0000000000000000, 
-    0b0000000000000000,
-    0b0000000000000000,
+constexpr std::array<std::bitset<8>, 8> chunkStart = {
+    0b00000000, 
+    0b00000000, 
+    0b00000000,
+    0b00000000, 
+    0b01100000, 
+    0b01100000,
+    0b00000000, 
+    0b00000000, 
+    // 0b0000000000000000, 
+    // 0b0000000000000000, 
+    // 0b0000000000000000,
+    // 0b0000000000000000, 
+    // 0b0110000000000000, 
+    // 0b0110000000000000,
+    // 0b0000000000000000, 
+    // 0b0000000000000000, 
+    // 0b0000000000000000,
+    // 0b0000000000000000, 
+    // 0b0000000000000000, 
+    // 0b0000000000000000,
+    // 0b0000000000000000, 
+    // 0b0000000000000000, 
+    // 0b0000000000000000,
+    // 0b0000000000000000,
 };
 // clang-format on
 
@@ -65,28 +74,25 @@ void simpleChunkTest() {
   Chunk c;
   char input;
 
+  for (int y = 0; y < Chunk::Size; y++) {
+    for (int x = 0; x < Chunk::Size; x++) {
+      c.setCell(x, y, chunkStart[(Chunk::Size - 1) - y][(Chunk::Size - 1) - x]);
+    }
+  }
+
   Console::Screen::clear();
   Console::Cursor::setPosition(0, 0);
   std::cout << c << std::endl;
   std::cin.get(input);
-  for (int y = 0; y < Chunk::Size; y++) {
-    for (int x = 0; x < Chunk::Size; x++) {
-      c.setCell(x, y, (x + y) % 2);
-      Console::Screen::clear();
-      Console::Cursor::setPosition(0, 0);
-      std::cout << c << std::endl;
-      std::cin.get(input);
-    }
+
+  while (input != 'q') {
+    c.processNextState();
+
+    Console::Screen::clear();
+    Console::Cursor::setPosition(0, 0);
+    std::cout << c << std::endl;
+    std::cin.get(input);
   }
-
-  // while (input != 'q') {
-  //   c.processNextState();
-
-  //   Console::Screen::clear();
-  //   Console::Cursor::setPosition(0, 0);
-  //   std::cout << c << std::endl;
-  //   std::cin.get(input);
-  // }
 }
 
 void simpleGameBoardTest() {
@@ -96,10 +102,9 @@ void simpleGameBoardTest() {
   for (int y = -16; y < 16; y++) {
     for (int x = -16; x < 16; x++) {
       gb.setPoint(x, y, (x + y) % 2);
-      std::cout << gb << std::flush;
-      std::cin.get(input);
     }
   }
+
   std::cout << gb << std::endl;
   std::cin.get(input);
 
