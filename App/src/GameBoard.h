@@ -3,13 +3,14 @@
 #include <cstdint>
 #include <functional>
 #include <iostream>
+#include <limits>
 #include <memory>
 #include <unordered_map>
 #include <utility>
 
 struct ChunkKey {
   ChunkKey(int32_t x, int32_t y) : x(x), y(y) {}
-  ChunkKey(std::pair<uint32_t, uint32_t> p) : x(p.first), y(p.second) {}
+  ChunkKey(std::pair<int32_t, int32_t> p) : x(p.first), y(p.second) {}
 
   int32_t x;
   int32_t y;
@@ -55,16 +56,16 @@ private:
 
   std::unordered_map<ChunkKey, std::shared_ptr<Chunk>, ChunkKeyHash> m_chunks;
 
-  int32_t m_maxX = 0;
-  int32_t m_minX = 0;
-  int32_t m_maxY = 0;
-  int32_t m_minY = 0;
+  int32_t m_maxX = std::numeric_limits<int32_t>::min();
+  int32_t m_minX = std::numeric_limits<int32_t>::max();
+  int32_t m_maxY = std::numeric_limits<int32_t>::min();
+  int32_t m_minY = std::numeric_limits<int32_t>::max();
 
   /**
    * Take a general (x,y) coordinate and find the chunk that it cooresponds
    * with.
    */
-  ChunkKey calcChunkKey(uint32_t x, uint32_t y);
+  ChunkKey calcChunkKey(int32_t x, int32_t y);
   /**
    * Checks a given chunk to see if it is empty and if it is removes it.
    */
@@ -97,7 +98,7 @@ public:
 
   // I think this should size should be 6 bits under the type used in m_data for
   // each row.
-  static constexpr uint32_t Size = 16;
+  static constexpr int32_t Size = 16;
   static constexpr uint64_t LeftBorderBit = 1ul << (Size + 1);
   static constexpr uint64_t RightBorderBit = 1ul;
   static constexpr uint64_t DataBits = ((1ul << Size) - 1) << 1;

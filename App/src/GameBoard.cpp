@@ -149,7 +149,7 @@ void GameBoard::checkChunk(ChunkKey key, std::shared_ptr<Chunk> c) {
   m_chunks.erase(key);
 }
 
-ChunkKey GameBoard::calcChunkKey(uint32_t x, uint32_t y) {
+ChunkKey GameBoard::calcChunkKey(int32_t x, int32_t y) {
   int32_t realChunkX, realChunkY;
 
   if (x >= 0) {
@@ -248,8 +248,8 @@ std::ostream &operator<<(std::ostream &o, GameBoard &g) {
   }
   o << std::endl;
 
-  o << "X: " << g.m_minX << "-" << g.m_maxX << " | Y: " << g.m_minY << "-"
-    << g.m_maxY << std::endl;
+  o << "X: (" << g.m_minX << ")-(" << g.m_maxX << ") | Y: (" << g.m_minY
+    << ")-(" << g.m_maxY << ")" << std::endl;
   o << "Total Chunks: " << g.m_chunks.size() << std::endl;
 
   return o;

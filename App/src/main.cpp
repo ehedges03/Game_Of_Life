@@ -93,8 +93,8 @@ void simpleGameBoardTest() {
   GameBoard gb;
   char input;
 
-  for (int y = 0; y < 32; y++) {
-    for (int x = 0; x < 32; x++) {
+  for (int y = -16; y < 16; y++) {
+    for (int x = -16; x < 16; x++) {
       gb.setPoint(x, y, (x + y) % 2);
       std::cout << gb << std::flush;
       std::cin.get(input);
