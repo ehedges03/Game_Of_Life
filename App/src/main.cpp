@@ -41,7 +41,7 @@ void simpleBitArrayTest() {
 }
 
 // clang-format off
-constexpr std::array<std::bitset<16>, 16> chunkStart = {
+constexpr std::array<uint16_t, 16> chunkStart = {
     0b0000000000000000, 
     0b0000000000000000, 
     0b0000000000000000,
@@ -72,7 +72,6 @@ void simpleChunkTest() {
 
   while (input != 'q') {
     c.processNextState();
-    c.swapToNextState();
 
     Console::Screen::clear();
     Console::Cursor::setPosition(0, 0);

@@ -1,42 +1,37 @@
 #include "GameBoard.h"
 #include "Utils/Console.h"
+#include <bitset>
 #include <iostream>
-#include <optional>
 #include <utility>
 
-static std::bitset<512> bitsToState;
-static bool bitsToStateSetup;
-
-static void setupBitsToStateMap() {
-  if (!bitsToStateSetup) {
-    for (int16_t i = 0; i <= 0b111111111; i++) {
-      uint8_t neighbor_count = 0;
-      int16_t neighbors = i & 0b111101111;
-      bool alive = i & 0b000010000;
-      while (neighbors > 0) {
-        if (neighbors & 0b1) {
-          neighbor_count++;
-        }
-
-        neighbors >>= 1;
+static std::bitset<512> createBitsToStateMap() {
+  std::bitset<512> map;
+  for (int16_t i = 0; i <= 0b111111111; i++) {
+    uint8_t neighbor_count = 0;
+    int16_t neighbors = i & 0b111101111;
+    bool alive = i & 0b000010000;
+    while (neighbors > 0) {
+      if (neighbors & 0b1) {
+        neighbor_count++;
       }
 
-      bitsToState[i] = neighbor_count == 3 || (neighbor_count == 2 && alive);
+      neighbors >>= 1;
     }
+
+    map[i] = neighbor_count == 3 || (neighbor_count == 2 && alive);
   }
+  return map;
 }
+
+static std::bitset<512> bitsToState = createBitsToStateMap();
 
 /*
 GameBoard method definitions
 */
 
 void GameBoard::setPoint(int32_t x, int32_t y, bool value) {
-  auto chunk = getChunk(x, y);
-
-  // Return early because chunk does not exist and there is nothing to set
-  if (!chunk.has_value() && !value) {
-    return;
-  }
+  ChunkKey key = calcChunkKey(x, y);
+  auto chunk = getOrMakeChunk(key);
 
   int32_t properX, properY;
 
@@ -52,18 +47,16 @@ void GameBoard::setPoint(int32_t x, int32_t y, bool value) {
     properY = -((y + 1) % Chunk::Size);
   }
 
-  if (chunk.has_value()) {
-    chunk.value().get()[properY][properX] = value;
-  } else {
-    getOrMakeChunk(x, y)[properY][properX] = value;
-  }
+  chunk->setCell(properY, properX, value);
+  checkChunk(key, chunk);
 }
 
 bool GameBoard::getPoint(int32_t x, int32_t y) {
-  auto chunk = getChunk(x, y);
+  ChunkKey key = calcChunkKey(x, y);
+  auto chunk = getChunk(key);
 
-  if (chunk.has_value()) {
-    return chunk.value().get()[x % Chunk::Size][y % Chunk::Size];
+  if (chunk) {
+    return chunk->getCell(x % Chunk::Size, y % Chunk::Size);
   }
 
   return false;
@@ -72,64 +65,91 @@ bool GameBoard::getPoint(int32_t x, int32_t y) {
 void GameBoard::update() {
   // Setup the border for all chunks
   for (auto &chunkPair : m_chunks) {
-    const Chunk &chunk = chunkPair.second;
-    int32_t x = x, y = y;
+    // const Chunk &chunk = chunkPair.second;
+    // int32_t x = x, y = y;
 
-    auto upLeft = getChunk(x - 1, y + 1);
-    if (upLeft.has_value())
-      upLeft.value().get().border.bottomRight = chunk[0][0];
+    // auto upLeft = getChunk(x - 1, y + 1);
+    // if (upLeft != nullptr)
+    //   upLeft.border.bottomRight = chunk[0][0];
 
-    auto upRight = getChunk(x + 1, y + 1);
-    if (upRight.has_value())
-      upRight.value().get().border.bottomRight = chunk[0][Chunk::Size - 1];
+    // auto upRight = getChunk(x + 1, y + 1);
+    // if (upRight.has_value())
+    //   upRight.value().get().border.bottomRight = chunk[0][Chunk::Size - 1];
 
-    auto downLeft = getChunk(x - 1, y - 1);
-    if (downLeft.has_value())
-      downLeft.value().get().border.bottomRight = chunk[Chunk::Size - 1][0];
+    // auto downLeft = getChunk(x - 1, y - 1);
+    // if (downLeft.has_value())
+    //   downLeft.value().get().border.bottomRight = chunk[Chunk::Size - 1][0];
 
-    auto downRight = getChunk(x + 1, y - 1);
-    if (downRight.has_value())
-      downRight.value().get().border.bottomRight =
-          chunk[Chunk::Size - 1][Chunk::Size - 1];
+    // auto downRight = getChunk(x + 1, y - 1);
+    // if (downRight.has_value())
+    //   downRight.value().get().border.bottomRight =
+    //       chunk[Chunk::Size - 1][Chunk::Size - 1];
 
-    auto up = getChunk(x, y + 1);
-    if (up.has_value())
-      up.value().get().border.bottom = chunk[0];
+    // auto up = getChunk(x, y + 1);
+    // if (up.has_value())
+    //   up.value().get().border.bottom = chunk[0];
 
-    auto down = getChunk(x, y - 1);
-    if (down.has_value())
-      down.value().get().border.bottom = chunk[Chunk::Size - 1];
+    // auto down = getChunk(x, y - 1);
+    // if (down.has_value())
+    //   down.value().get().border.bottom = chunk[Chunk::Size - 1];
 
-    auto left = getChunk(x - 1, y);
-    if (left.has_value()) {
-      Chunk &leftChunk = left.value().get();
-      for (int i = 0; i < Chunk::Size; i++) {
-        leftChunk.border.right[i] = chunk[i][0];
-      }
-    }
+    // auto left = getChunk(x - 1, y);
+    // if (left.has_value()) {
+    //   Chunk &leftChunk = left.value().get();
+    //   for (int i = 0; i < Chunk::Size; i++) {
+    //     leftChunk.border.right[i] = chunk[i][0];
+    //   }
+    // }
 
-    auto right = getChunk(x + 1, y);
-    if (right.has_value()) {
-      Chunk &rightChunk = right.value().get();
-      for (int i = 0; i < Chunk::Size; i++) {
-        rightChunk.border.right[i] = chunk[i][Chunk::Size - 1];
-      }
-    }
+    // auto right = getChunk(x + 1, y);
+    // if (right.has_value()) {
+    //   Chunk &rightChunk = right.value().get();
+    //   for (int i = 0; i < Chunk::Size; i++) {
+    //     rightChunk.border.right[i] = chunk[i][Chunk::Size - 1];
+    //   }
+    // }
   }
 
   // Process the chunks
   for (auto &chunkPair : m_chunks) {
-    chunkPair.second.processNextState();
-  }
-
-  // Update the chunks
-  for (auto &chunkPair : m_chunks) {
-    chunkPair.second.swapToNextState();
+    chunkPair.second->processNextState();
   }
 }
 
-std::optional<std::reference_wrapper<Chunk>> GameBoard::getChunk(int32_t x, int32_t y) {
+void GameBoard::checkChunk(ChunkKey key, std::shared_ptr<Chunk> c) {
+  if (!c || !c->empty())
+    return;
+
+  if (c->upLeft)
+    c->upLeft->downRight = nullptr;
+
+  if (c->up)
+    c->up->down = nullptr;
+
+  if (c->upRight)
+    c->upRight->downLeft = nullptr;
+
+  if (c->left)
+    c->left->right = nullptr;
+
+  if (c->right)
+    c->right->left = nullptr;
+
+  if (c->downLeft)
+    c->downLeft->upRight = nullptr;
+
+  if (c->down)
+    c->down->up = nullptr;
+
+  if (c->downRight)
+    c->downRight->upLeft = nullptr;
+
+  m_chunks.erase(key);
+}
+
+ChunkKey GameBoard::calcChunkKey(uint32_t x, uint32_t y) {
   int32_t realChunkX, realChunkY;
+
   if (x >= 0) {
     realChunkX = x / Chunk::Size;
   } else {
@@ -142,36 +162,68 @@ std::optional<std::reference_wrapper<Chunk>> GameBoard::getChunk(int32_t x, int3
     realChunkY = -1 + ((y + 1) / Chunk::Size);
   }
 
-  std::pair<int32_t, int32_t> chunkKey{realChunkX, realChunkY};
-
-  if (m_chunks.find(chunkKey) == m_chunks.end()) {
-    return std::nullopt;
-  }
-
-  return m_chunks.at(chunkKey);
+  return {realChunkX, realChunkY};
 }
 
-Chunk &GameBoard::getOrMakeChunk(int32_t x, int32_t y) {
-  int32_t realChunkX, realChunkY;
-  if (x >= 0) {
-    realChunkX = x / Chunk::Size;
-  } else {
-    realChunkX = -1 + ((x + 1) / Chunk::Size);
+std::shared_ptr<Chunk> GameBoard::getChunk(ChunkKey key) {
+  auto chunk_entry = m_chunks.find(key);
+  if (chunk_entry == m_chunks.end()) {
+    return nullptr;
   }
 
-  if (y >= 0) {
-    realChunkY = y / Chunk::Size;
-  } else {
-    realChunkY = -1 + ((y + 1) / Chunk::Size);
+  return chunk_entry->second;
+}
+
+std::shared_ptr<Chunk> GameBoard::getOrMakeChunk(ChunkKey key) {
+  std::shared_ptr<Chunk> chunk = getChunk(key);
+
+  if (chunk) {
+    return chunk;
   }
 
   // Update the boundaries of the GameBoard
-  m_maxX = std::max(realChunkX, m_maxX);
-  m_minX = std::min(realChunkX, m_minX);
-  m_maxY = std::max(realChunkY, m_maxY);
-  m_minY = std::min(realChunkY, m_minY);
+  m_maxX = std::max(key.x, m_maxX);
+  m_minX = std::min(key.x, m_minX);
+  m_maxY = std::max(key.y, m_maxY);
+  m_minY = std::min(key.y, m_minY);
 
-  return m_chunks[{realChunkX, realChunkY}];
+  chunk = std::make_shared<Chunk>();
+  m_chunks[key] = chunk;
+
+  chunk->upLeft = getChunk({key.x - 1, key.y + 1});
+  chunk->up = getChunk({key.x, key.y + 1});
+  chunk->upRight = getChunk({key.x + 1, key.y + 1});
+  chunk->left = getChunk({key.x - 1, key.y});
+  chunk->right = getChunk({key.x + 1, key.y});
+  chunk->downLeft = getChunk({key.x - 1, key.y - 1});
+  chunk->down = getChunk({key.x, key.y - 1});
+  chunk->downRight = getChunk({key.x + 1, key.y - 1});
+
+  if (chunk->upLeft)
+    chunk->upLeft->downRight = chunk;
+
+  if (chunk->up)
+    chunk->up->down = chunk;
+
+  if (chunk->upRight)
+    chunk->upRight->downLeft = chunk;
+
+  if (chunk->left)
+    chunk->left->right = chunk;
+
+  if (chunk->right)
+    chunk->right->left = chunk;
+
+  if (chunk->downLeft)
+    chunk->downLeft->upRight = chunk;
+
+  if (chunk->down)
+    chunk->down->up = chunk;
+
+  if (chunk->downRight)
+    chunk->downRight->upLeft = chunk;
+
+  return chunk;
 }
 
 std::ostream &operator<<(std::ostream &o, GameBoard &g) {
@@ -196,10 +248,11 @@ std::ostream &operator<<(std::ostream &o, GameBoard &g) {
   return o;
 }
 
-std::ostream &operator<<(std::ostream &o, Chunk c) {
-  for (auto &r : c.m_dataBuffer[c.m_currBuffer]) {
-    for (int i = Chunk::Size - 1; i >= 0; i--) {
-      if (r[i]) {
+std::ostream &operator<<(std::ostream &o, Chunk &c) {
+  for (int32_t y = 32; y > 0; y++) {
+    std::bitset<Chunk::Size> row((c.m_data[y] & Chunk::DataBits) >> 1);
+    for (int x = Chunk::Size - 1; x >= 0; x--) {
+      if (row[x]) {
         o << "▓";
       } else {
         o << "0";
@@ -215,71 +268,74 @@ std::ostream &operator<<(std::ostream &o, Chunk c) {
  * Chunk method definitions
  */
 
-//Chunk::Chunk() {};
+bool Chunk::getCell(int32_t x, int32_t y) {
+  uint64_t mask = 1ul << (Size - x);
+  return m_data[y + 1] & mask;
+}
+
+void Chunk::setCell(int32_t x, int32_t y, bool val) {
+  uint64_t loc = 1ul << (Size - x);
+  if (val) {
+    m_data[y + 1] |= loc;
+  } else {
+    m_data[y + 1] &= ~loc;
+  }
+}
 
 void Chunk::processNextState() {
   // Left
   // Right
 
   // Inside Column
-  uint64_t up;
-  uint64_t current = border.top.to_ulong();
-  uint64_t down = m_dataBuffer[m_currBuffer][0].to_ulong();
-  for (int i = 0; i < Chunk::Size - 1; i++) {
-    up = current;
-    current = down;
-    down = m_dataBuffer[m_currBuffer][i - 1].to_ulong();
-    for (int j = 1; j < Chunk::Size - 1; j++) {
-      uint32_t around = 0;
+  // uint64_t up;
+  // uint64_t current = border.top.to_ulong();
+  // uint64_t current = 0;
+  // uint64_t down = m_data[0];
+  // for (int i = 0; i < Chunk::Size - 1; i++) {
+  //   up = current;
+  //   current = down;
+  //   down = m_data[i - 1];
+  //   for (int j = 1; j < Chunk::Size - 1; j++) {
+  //     uint32_t around = 0;
 
-      // Top 3 bits
-      around |= (up >> ((Chunk::Size - 8) - j)) & 0b111000000;
+  //     // Top 3 bits
+  //     around |= (up >> ((Chunk::Size - 8) - j)) & 0b111000000;
 
-      // Middle 3 bits
-      around |= (current >> ((Chunk::Size - 5) - j)) & 0b000111000;
+  //     // Middle 3 bits
+  //     around |= (current >> ((Chunk::Size - 5) - j)) & 0b000111000;
 
-      // Bottom 3 bits
-      around |= (down >> ((Chunk::Size - 2) - j)) & 0b000000111;
+  //     // Bottom 3 bits
+  //     around |= (down >> ((Chunk::Size - 2) - j)) & 0b000000111;
 
-      m_dataBuffer[m_currBuffer ^ 1][i][j] = bitsToState[around];
-    }
-  }
-  up = current;
-  current = down;
-  down = border.bottom.to_ulong();
-  for (int j = 1; j < Size - 1; j++) {
-    uint32_t around = 0;
+  //     m_data[i][j] = bitsToState[around];
+  //   }
+  // }
+  // up = current;
+  // current = down;
+  // down = 0;
+  // for (int j = 1; j < Size - 1; j++) {
+  //   uint32_t around = 0;
 
-    // Top 3 bits
-    around |= (up >> ((Size - 8) - j)) & 0b111000000;
+  //   // Top 3 bits
+  //   around |= (up >> ((Size - 8) - j)) & 0b111000000;
 
-    // Middle 3 bits
-    around |= (current >> ((Size - 5) - j)) & 0b000111000;
+  //   // Middle 3 bits
+  //   around |= (current >> ((Size - 5) - j)) & 0b000111000;
 
-    // Bottom 3 bits
-    around |= (down >> ((Size - 2) - j)) & 0b000000111;
+  //   // Bottom 3 bits
+  //   around |= (down >> ((Size - 2) - j)) & 0b000000111;
 
-    m_dataBuffer[m_currBuffer ^ 1][Size - 1][j] = bitsToState[around];
-  }
-}
-
-void Chunk::swapToNextState() {
-  m_currBuffer ^= 1;
+  //   m_data[Size - 1][j] = bitsToState[around];
+  // }
 }
 
 bool Chunk::empty() {
-  std::bitset<Size> val;
-  for (auto &row : m_dataBuffer[m_currBuffer]) {
-    val |= row;
+  uint64_t val;
+  // Skip top and bottom
+  for (int32_t i = 1; i <= Size; i++) {
+    // Or with borders cleared
+    val |= (m_data[i] & DataBits);
   }
 
-  return val.any();
+  return val == 0;
 };
-
-std::bitset<Chunk::Size> &Chunk::operator[](int32_t i) {
-  return m_dataBuffer[m_currBuffer][i];
-}
-
-const std::bitset<Chunk::Size> &Chunk::operator[](int32_t i) const {
-  return m_dataBuffer[m_currBuffer][i];
-}
