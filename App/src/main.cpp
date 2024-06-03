@@ -16,7 +16,7 @@ void simpleLoggerTest();
 int main() {
   simpleBitArrayTest();
   simpleWrappedPointTest();
-  simpleChunkTest();
+  // simpleChunkTest();
   simpleGameBoardTest();
   simpleLoggerTest();
 }
@@ -47,26 +47,10 @@ constexpr std::array<std::bitset<8>, 8> chunkStart = {
     0b00000000, 
     0b00000000,
     0b00000000, 
-    0b01100000, 
+    0b00000000, 
     0b01100000,
-    0b00000000, 
-    0b00000000, 
-    // 0b0000000000000000, 
-    // 0b0000000000000000, 
-    // 0b0000000000000000,
-    // 0b0000000000000000, 
-    // 0b0110000000000000, 
-    // 0b0110000000000000,
-    // 0b0000000000000000, 
-    // 0b0000000000000000, 
-    // 0b0000000000000000,
-    // 0b0000000000000000, 
-    // 0b0000000000000000, 
-    // 0b0000000000000000,
-    // 0b0000000000000000, 
-    // 0b0000000000000000, 
-    // 0b0000000000000000,
-    // 0b0000000000000000,
+    0b10100000, 
+    0b00100000, 
 };
 // clang-format on
 
@@ -74,9 +58,9 @@ void simpleChunkTest() {
   Chunk c;
   char input;
 
-  for (int y = 0; y < Chunk::Size; y++) {
-    for (int x = 0; x < Chunk::Size; x++) {
-      c.setCell(x, y, chunkStart[(Chunk::Size - 1) - y][(Chunk::Size - 1) - x]);
+  for (int y = 0; y < 8; y++) {
+    for (int x = 0; x < 8; x++) {
+      c.setCell(x, y, chunkStart[7 - y][7 - x]);
     }
   }
 
@@ -99,9 +83,16 @@ void simpleGameBoardTest() {
   GameBoard gb;
   char input;
 
-  for (int y = -16; y < 16; y++) {
-    for (int x = -16; x < 16; x++) {
-      gb.setPoint(x, y, (x + y) % 2);
+  for (int y = 0; y < 32; y += 4) {
+    for (int x = 0; x < 32; x+= 4) {
+      gb.setPoint(x, y, true);
+      gb.setPoint(x, y, false);
+    }
+  }
+
+  for (int y = 0; y < 8; y++) {
+    for (int x = 0; x < 8; x++) {
+      gb.setPoint(x, y, chunkStart[7 - y][7 - x]);
     }
   }
 

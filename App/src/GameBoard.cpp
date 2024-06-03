@@ -185,6 +185,33 @@ std::shared_ptr<Chunk> GameBoard::getOrMakeChunk(ChunkKey key) {
   return chunk;
 }
 
+// std::ostream &operator<<(std::ostream &o, GameBoard &g) {
+//   Chunk defaultEmpty;
+//   Console::Screen::clear();
+//   Console::Cursor::setPosition(0, 0);
+// 
+//   for (int32_t y = g.m_maxY; y >= g.m_minY; y--) {
+//     for (int32_t x = g.m_minX; x <= g.m_maxX; x++) {
+//       if (g.m_chunks.find({x, y}) != g.m_chunks.end()) {
+//         o << *g.m_chunks.at({x, y}) << std::flush;
+//       } else {
+//         o << defaultEmpty << std::flush;
+//       }
+//       Console::Cursor::up(Chunk::Size);
+//       Console::Cursor::forward(Chunk::Size);
+//     }
+//     Console::Cursor::down(Chunk::Size - 1);
+//     std::cout << std::endl;
+//   }
+//   o << std::endl;
+// 
+//   o << "X: (" << g.m_minX << ")-(" << g.m_maxX << ") | Y: (" << g.m_minY
+//     << ")-(" << g.m_maxY << ")" << std::endl;
+//   o << "Total Chunks: " << g.m_chunks.size() << std::endl;
+// 
+//   return o;
+// }
+
 std::ostream &operator<<(std::ostream &o, GameBoard &g) {
   Chunk defaultEmpty;
   Console::Screen::clear();
@@ -197,10 +224,10 @@ std::ostream &operator<<(std::ostream &o, GameBoard &g) {
       } else {
         o << defaultEmpty << std::flush;
       }
-      Console::Cursor::up(Chunk::Size);
-      Console::Cursor::forward(Chunk::Size);
+      Console::Cursor::up(Chunk::Size + 2);
+      Console::Cursor::forward(Chunk::Size + 3);
     }
-    Console::Cursor::down(Chunk::Size - 1);
+    Console::Cursor::down(Chunk::Size + 2);
     std::cout << std::endl;
   }
   o << std::endl;
@@ -212,10 +239,27 @@ std::ostream &operator<<(std::ostream &o, GameBoard &g) {
   return o;
 }
 
+// std::ostream &operator<<(std::ostream &o, Chunk &c) {
+//   for (int32_t y = Chunk::Size; y > 0; y--) {
+//     std::bitset<Chunk::Size> row((c.m_data[y] & Chunk::DataBits) >> 1);
+//     for (int x = Chunk::Size - 1; x >= 0; x--) {
+//       if (row[x]) {
+//         o << "▓";
+//       } else {
+//         o << "0";
+//       }
+//     }
+//     Console::Cursor::down(1);
+//     Console::Cursor::backward(Chunk::Size);
+//   }
+//   return o;
+// }
+
 std::ostream &operator<<(std::ostream &o, Chunk &c) {
-  for (int32_t y = Chunk::Size; y > 0; y--) {
-    std::bitset<Chunk::Size> row((c.m_data[y] & Chunk::DataBits) >> 1);
-    for (int x = Chunk::Size - 1; x >= 0; x--) {
+  c.readInBorder();
+  for (int32_t y = Chunk::Size + 1; y >= 0; y--) {
+    std::bitset<Chunk::Size + 2> row(c.m_data[y]);
+    for (int x = Chunk::Size + 1; x >= 0; x--) {
       if (row[x]) {
         o << "▓";
       } else {
@@ -223,7 +267,7 @@ std::ostream &operator<<(std::ostream &o, Chunk &c) {
       }
     }
     Console::Cursor::down(1);
-    Console::Cursor::backward(Chunk::Size);
+    Console::Cursor::backward(Chunk::Size + 2);
   }
   return o;
 }
@@ -250,46 +294,46 @@ void Chunk::readInBorder() {
   for (int i = 1; i <= Chunk::Size; i++) {
     m_data[i] &= DataBits;
   }
-  m_data[Chunk::Size - 1] = 0;
+  m_data[Chunk::Size + 1] = 0;
   m_data[0] = 0;
 
   if (up) {
-    m_data[Chunk::Size - 1] &= up->m_data[1];
+    m_data[Chunk::Size + 1] |= up->m_data[1];
   }
 
   if (upLeft) {
-    m_data[Chunk::Size - 1] &=
-        (upLeft->m_data[1] << Chunk::Size) | ~LeftBorderBit;
+    m_data[Chunk::Size + 1] |=
+        (upLeft->m_data[1] << Chunk::Size) & LeftBorderBit;
   }
 
   if (upRight) {
-    m_data[Chunk::Size - 1] &=
-        (upRight->m_data[1] >> Chunk::Size) | ~RightBorderBit;
+    m_data[Chunk::Size + 1] |=
+        (upRight->m_data[1] >> Chunk::Size) & RightBorderBit;
   }
 
   if (down) {
-    m_data[0] &= down->m_data[Chunk::Size - 1];
+    m_data[0] |= down->m_data[Chunk::Size];
   }
 
   if (downLeft) {
-    m_data[0] &=
-        (downLeft->m_data[Chunk::Size - 1] << Chunk::Size) | ~LeftBorderBit;
+    m_data[0] |=
+        (downLeft->m_data[Chunk::Size] << Chunk::Size) & LeftBorderBit;
   }
 
   if (downRight) {
-    m_data[0] &=
-        (downRight->m_data[Chunk::Size - 1] >> Chunk::Size) | ~RightBorderBit;
+    m_data[0] |=
+        (downRight->m_data[Chunk::Size] >> Chunk::Size) & RightBorderBit;
   }
 
   if (left) {
     for (int i = 1; i <= Chunk::Size; i++) {
-      m_data[i] &= (left->m_data[i] << Chunk::Size) | ~LeftBorderBit;
+      m_data[i] |= (left->m_data[i] << Chunk::Size) & LeftBorderBit;
     }
   }
 
   if (right) {
     for (int i = 1; i <= Chunk::Size; i++) {
-      m_data[i] &= (right->m_data[i] >> Chunk::Size) | ~RightBorderBit;
+      m_data[i] |= (right->m_data[i] >> Chunk::Size) & RightBorderBit;
     }
   }
 }
