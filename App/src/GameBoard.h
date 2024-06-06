@@ -76,6 +76,16 @@ private:
 
 class Chunk {
 public:
+  enum Flags : uint32_t {
+    CLEAR = 0,
+    // Flag specifying that the chunk is currently empty better to just check
+    // this than constantly caluclate it
+    EMPTY = 1,
+    // Flag specifying that one or more of the surrounding border chunks does
+    // not exist
+    MISSING_BORDER = 1 << 1,
+  };
+
   std::shared_ptr<Chunk> upLeft;
   std::shared_ptr<Chunk> up;
   std::shared_ptr<Chunk> upRight;
@@ -94,8 +104,15 @@ public:
   static constexpr uint64_t k_rightBorderBit = 1ul;
   static constexpr uint64_t k_dataBits = ((1ul << k_size) - 1) << 1;
 
-  void processNextState();
+  // I am not sure if this should return the chunks Flags, maybe there should
+  // just be a function called getFlags() or maybe both?
+  Flags processNextState();
   void readInBorder();
+  // I am not sure what to do with this function, maybe it should be private
+  // because I have a flag that can be used instead to figure out if the chunk
+  // is empty and then this function can be run at the end of processing a chunk
+  // and then set the flag accordingly allowing it to only be processed once. It
+  // is not particulalry intensive to process
   bool empty();
 
   bool getCell(int32_t x, int32_t y);
@@ -124,5 +141,28 @@ public:
   friend std::ostream &operator<<(std::ostream &o, Chunk &c);
 
 private:
-  std::array<uint64_t, k_size + 2> m_data {};
+  Flags m_flags = Flags::CLEAR;
+  std::array<uint64_t, k_size + 2> m_data{};
 };
+
+inline Chunk::Flags operator~(Chunk::Flags a) {
+  return (Chunk::Flags) ~(uint32_t)a;
+}
+inline Chunk::Flags operator|(Chunk::Flags a, Chunk::Flags b) {
+  return (Chunk::Flags)((uint32_t)a | (uint32_t)b);
+}
+inline Chunk::Flags operator&(Chunk::Flags a, Chunk::Flags b) {
+  return (Chunk::Flags)((uint32_t)a & (uint32_t)b);
+}
+inline Chunk::Flags operator^(Chunk::Flags a, Chunk::Flags b) {
+  return (Chunk::Flags)((uint32_t)a ^ (uint32_t)b);
+}
+inline Chunk::Flags &operator|=(Chunk::Flags &a, Chunk::Flags b) {
+  return (Chunk::Flags &)((uint32_t &)a |= (uint32_t)b);
+}
+inline Chunk::Flags &operator&=(Chunk::Flags &a, Chunk::Flags b) {
+  return (Chunk::Flags &)((uint32_t &)a &= (uint32_t)b);
+}
+inline Chunk::Flags &operator^=(Chunk::Flags &a, Chunk::Flags b) {
+  return (Chunk::Flags &)((uint32_t &)a ^= (uint32_t)b);
+}

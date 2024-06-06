@@ -25,6 +25,21 @@ constexpr std::array<bool, 512> createBitsToStateMap() {
 
 static const std::array<bool, 512> bitsToState = createBitsToStateMap();
 
+constexpr std::array<bool, 256> createThreeConsecBitInByteMap() {
+  std::array<bool, 256> map{};
+
+  for (int i = 0b111; i <= 0b11100000; i <<= 1) {
+    map[i] = true;
+  }
+
+  return map;
+}
+
+// I apoligize for this name bit it stands for three consecutive bits in a byte
+// map Which takes in a byte and tells you if there are 3 consecutive bits in
+// that byte pretty self explanatory ¯\_(ツ)_/¯
+static const std::array<bool, 256> tcbibm = createThreeConsecBitInByteMap();
+
 /*
 GameBoard method definitions
 */
@@ -187,8 +202,8 @@ std::shared_ptr<Chunk> GameBoard::getOrMakeChunk(ChunkKey key) {
 
 #define VISUALIZE_BORDERS true
 
-
-// These have to be able to print as one character wide otherwise it will break the print
+// These have to be able to print as one character wide otherwise it will break
+// the print
 #ifdef _WIN32
 
 #define ALIVE_CELL "0"
@@ -245,10 +260,6 @@ std::ostream &operator<<(std::ostream &o, GameBoard &g) {
 
   return o;
 }
-
-// std::ostream &operator<<(std::ostream &o, Chunk &c) {
-//   return o;
-// }
 
 std::ostream &operator<<(std::ostream &o, Chunk &c) {
 #if VISUALIZE_BORDERS
@@ -310,46 +321,100 @@ void Chunk::readInBorder() {
   m_data[k_topBorder] = 0;
   m_data[k_bottomBorder] = 0;
 
+  // Clear the missing border chunk flag
+  m_flags &= ~Flags::MISSING_BORDER;
+
   if (up) {
     m_data[k_topBorder] |= up->m_data[1] & k_dataBits;
+  } else {
+    m_flags |= Flags::MISSING_BORDER;
   }
 
   if (upLeft) {
     m_data[k_topBorder] |= (upLeft->m_data[1] << k_size) & k_leftBorderBit;
+  } else {
+    m_flags |= Flags::MISSING_BORDER;
   }
 
   if (upRight) {
     m_data[k_topBorder] |= (upRight->m_data[1] >> k_size) & k_rightBorderBit;
+  } else {
+    m_flags |= Flags::MISSING_BORDER;
   }
 
   if (down) {
     m_data[k_bottomBorder] |= down->m_data[k_size] & k_dataBits;
+  } else {
+    m_flags |= Flags::MISSING_BORDER;
   }
 
   if (downLeft) {
     m_data[k_bottomBorder] |=
         (downLeft->m_data[k_size] << k_size) & k_leftBorderBit;
+  } else {
+    m_flags |= Flags::MISSING_BORDER;
   }
 
   if (downRight) {
     m_data[k_bottomBorder] |=
         (downRight->m_data[k_size] >> k_size) & k_rightBorderBit;
+  } else {
+    m_flags |= Flags::MISSING_BORDER;
   }
 
   if (left) {
     for (int i = 1; i <= k_size; i++) {
       m_data[i] |= (left->m_data[i] << k_size) & k_leftBorderBit;
     }
+  } else {
+    m_flags |= Flags::MISSING_BORDER;
   }
 
   if (right) {
     for (int i = 1; i <= k_size; i++) {
       m_data[i] |= (right->m_data[i] >> k_size) & k_rightBorderBit;
     }
+  } else {
+    m_flags |= Flags::MISSING_BORDER;
   }
 }
 
-void Chunk::processNextState() {
+Chunk::Flags Chunk::processNextState() {
+  if (m_flags & Flags::EMPTY) {
+    // Logic for if the border will spawn any cells or not
+    uint64_t top = m_data[k_topBorder];
+    uint64_t bottom = m_data[k_bottomBorder];
+    uint64_t left = 0;
+    uint64_t right = 0;
+
+    for (int i = k_bottomBorder; i <= k_topBorder; i++) {
+      right <<= 1;
+      right |= m_data[i] & k_rightBorderBit;
+
+      left >>= 1;
+      left |= m_data[i] & k_leftBorderBit;
+    }
+
+    // The + 2 is for the border and the + 3 is to round up the calculation
+    constexpr int32_t nibbles = ((k_size + 2) + 3) / 4;
+
+    bool spawnFromBorder = false;
+
+    for (int i = 0; i < nibbles && !spawnFromBorder; i++) {
+      spawnFromBorder = tcbibm[top & 0xFF] || tcbibm[bottom & 0xFF] ||
+                        tcbibm[left & 0xFF] || tcbibm[right & 0xFF];
+
+      top >>= 4;
+      bottom >>= 4;
+      left >>= 4;
+      right >>= 4;
+    }
+
+    if (!spawnFromBorder) {
+      return m_flags;
+    }
+  }
+
   uint64_t top = m_data[k_topBorder];
 
   for (int y = k_size; y > k_bottomBorder; y--) {
@@ -383,6 +448,8 @@ void Chunk::processNextState() {
     top = m_data[y];
     m_data[y] = newVals;
   }
+
+  return m_flags;
 }
 
 bool Chunk::empty() {
