@@ -36,17 +36,17 @@ void GameBoard::setPoint(int32_t x, int32_t y, bool value) {
   int32_t properX, properY;
 
   if (x >= 0) {
-    properX = x % Chunk::Size;
+    properX = x % Chunk::k_size;
   } else {
-    properX = (Chunk::Size - 1) + ((x + 1) % Chunk::Size);
+    properX = (Chunk::k_size - 1) + ((x + 1) % Chunk::k_size);
   }
 
   if (y >= 0) {
-    properY = y % Chunk::Size;
+    properY = y % Chunk::k_size;
     // properY = (Chunk::Size - 1) - ((y) % Chunk::Size);
   } else {
     // properY = -((y + 1) % Chunk::Size);
-    properY = (Chunk::Size - 1) + ((y + 1) % Chunk::Size);
+    properY = (Chunk::k_size - 1) + ((y + 1) % Chunk::k_size);
   }
 
   chunk->setCell(properX, properY, value);
@@ -57,7 +57,7 @@ bool GameBoard::getPoint(int32_t x, int32_t y) {
   auto chunk = getChunk(key);
 
   if (chunk) {
-    return chunk->getCell(x % Chunk::Size, y % Chunk::Size);
+    return chunk->getCell(x % Chunk::k_size, y % Chunk::k_size);
   }
 
   return false;
@@ -110,15 +110,15 @@ ChunkKey GameBoard::calcChunkKey(int32_t x, int32_t y) {
   int32_t realChunkX, realChunkY;
 
   if (x >= 0) {
-    realChunkX = x / Chunk::Size;
+    realChunkX = x / Chunk::k_size;
   } else {
-    realChunkX = -1 + ((x + 1) / Chunk::Size);
+    realChunkX = -1 + ((x + 1) / Chunk::k_size);
   }
 
   if (y >= 0) {
-    realChunkY = y / Chunk::Size;
+    realChunkY = y / Chunk::k_size;
   } else {
-    realChunkY = -1 + ((y + 1) / Chunk::Size);
+    realChunkY = -1 + ((y + 1) / Chunk::k_size);
   }
 
   return {realChunkX, realChunkY};
@@ -185,38 +185,28 @@ std::shared_ptr<Chunk> GameBoard::getOrMakeChunk(ChunkKey key) {
   return chunk;
 }
 
-// std::ostream &operator<<(std::ostream &o, GameBoard &g) {
-//   Chunk defaultEmpty;
-//   Console::Screen::clear();
-//   Console::Cursor::setPosition(0, 0);
-// 
-//   for (int32_t y = g.m_maxY; y >= g.m_minY; y--) {
-//     for (int32_t x = g.m_minX; x <= g.m_maxX; x++) {
-//       if (g.m_chunks.find({x, y}) != g.m_chunks.end()) {
-//         o << *g.m_chunks.at({x, y}) << std::flush;
-//       } else {
-//         o << defaultEmpty << std::flush;
-//       }
-//       Console::Cursor::up(Chunk::Size);
-//       Console::Cursor::forward(Chunk::Size);
-//     }
-//     Console::Cursor::down(Chunk::Size - 1);
-//     std::cout << std::endl;
-//   }
-//   o << std::endl;
-// 
-//   o << "X: (" << g.m_minX << ")-(" << g.m_maxX << ") | Y: (" << g.m_minY
-//     << ")-(" << g.m_maxY << ")" << std::endl;
-//   o << "Total Chunks: " << g.m_chunks.size() << std::endl;
-// 
-//   return o;
-// }
+#define VISUALIZE_BORDERS true
+
+
+// These have to be able to print as one character wide otherwise it will break the print
+#ifdef _WIN32
+
+#define ALIVE_CELL "0"
+#define DEAD_CELL "/"
+
+#else
+
+#define ALIVE_CELL "▓"
+#define DEAD_CELL "0"
+
+#endif
 
 std::ostream &operator<<(std::ostream &o, GameBoard &g) {
   Chunk defaultEmpty;
   Console::Screen::clear();
   Console::Cursor::setPosition(0, 0);
 
+#if VISUALIZE_BORDERS
   for (int32_t y = g.m_maxY; y >= g.m_minY; y--) {
     for (int32_t x = g.m_minX; x <= g.m_maxX; x++) {
       if (g.m_chunks.find({x, y}) != g.m_chunks.end()) {
@@ -224,12 +214,29 @@ std::ostream &operator<<(std::ostream &o, GameBoard &g) {
       } else {
         o << defaultEmpty << std::flush;
       }
-      Console::Cursor::up(Chunk::Size + 2);
-      Console::Cursor::forward(Chunk::Size + 3);
+      Console::Cursor::up(Chunk::k_size + 2);
+      Console::Cursor::forward(Chunk::k_size + 3);
     }
-    Console::Cursor::down(Chunk::Size + 2);
+    Console::Cursor::down(Chunk::k_size + 2);
     std::cout << std::endl;
   }
+#else
+  for (int32_t y = g.m_maxY; y >= g.m_minY; y--) {
+    for (int32_t x = g.m_minX; x <= g.m_maxX; x++) {
+      if (g.m_chunks.find({x, y}) != g.m_chunks.end()) {
+        o << *g.m_chunks.at({x, y}) << std::flush;
+      } else {
+        o << defaultEmpty << std::flush;
+      }
+      Console::Cursor::up(Chunk::k_size);
+      Console::Cursor::forward(Chunk::k_size);
+    }
+    Console::Cursor::down(Chunk::k_size - 1);
+    std::cout << std::endl;
+  }
+
+#endif
+
   o << std::endl;
 
   o << "X: (" << g.m_minX << ")-(" << g.m_maxX << ") | Y: (" << g.m_minY
@@ -240,35 +247,41 @@ std::ostream &operator<<(std::ostream &o, GameBoard &g) {
 }
 
 // std::ostream &operator<<(std::ostream &o, Chunk &c) {
-//   for (int32_t y = Chunk::Size; y > 0; y--) {
-//     std::bitset<Chunk::Size> row((c.m_data[y] & Chunk::DataBits) >> 1);
-//     for (int x = Chunk::Size - 1; x >= 0; x--) {
-//       if (row[x]) {
-//         o << "▓";
-//       } else {
-//         o << "0";
-//       }
-//     }
-//     Console::Cursor::down(1);
-//     Console::Cursor::backward(Chunk::Size);
-//   }
 //   return o;
 // }
 
 std::ostream &operator<<(std::ostream &o, Chunk &c) {
+#if VISUALIZE_BORDERS
+  // Make sure that the border is read in before rendering it out
   c.readInBorder();
-  for (int32_t y = Chunk::Size + 1; y >= 0; y--) {
-    std::bitset<Chunk::Size + 2> row(c.m_data[y]);
-    for (int x = Chunk::Size + 1; x >= 0; x--) {
+
+  for (int32_t y = Chunk::k_topBorder; y >= 0; y--) {
+    std::bitset<Chunk::k_size + 2> row(c.m_data[y]);
+    for (int x = Chunk::k_size + 1; x >= 0; x--) {
       if (row[x]) {
-        o << "O";
+        o << ALIVE_CELL;
       } else {
-        o << "/";
+        o << DEAD_CELL;
       }
     }
     Console::Cursor::down(1);
-    Console::Cursor::backward(Chunk::Size + 2);
+    Console::Cursor::backward(Chunk::k_size + 2);
   }
+#else
+  for (int32_t y = Chunk::k_size; y > 0; y--) {
+    std::bitset<Chunk::k_size> row((c.m_data[y] & Chunk::k_dataBits) >> 1);
+    for (int x = Chunk::k_size - 1; x >= 0; x--) {
+      if (row[x]) {
+        o << ALIVE_CELL;
+      } else {
+        o << DEAD_CELL;
+      }
+    }
+    Console::Cursor::down(1);
+    Console::Cursor::backward(Chunk::k_size);
+  }
+#endif
+
   return o;
 }
 
@@ -277,12 +290,12 @@ std::ostream &operator<<(std::ostream &o, Chunk &c) {
  */
 
 bool Chunk::getCell(int32_t x, int32_t y) {
-  uint64_t mask = 1ul << (Size - x);
+  uint64_t mask = 1ul << (k_size - x);
   return m_data[y + 1] & mask;
 }
 
 void Chunk::setCell(int32_t x, int32_t y, bool val) {
-  uint64_t loc = 1ul << (Size - x);
+  uint64_t loc = 1ul << (k_size - x);
   if (val) {
     m_data[y + 1] |= loc;
   } else {
@@ -291,61 +304,59 @@ void Chunk::setCell(int32_t x, int32_t y, bool val) {
 }
 
 void Chunk::readInBorder() {
-  for (int i = 1; i <= Chunk::Size; i++) {
-    m_data[i] &= DataBits;
+  for (int i = 1; i <= k_size; i++) {
+    m_data[i] &= k_dataBits;
   }
-  m_data[Chunk::Size + 1] = 0;
-  m_data[0] = 0;
+  m_data[k_topBorder] = 0;
+  m_data[k_bottomBorder] = 0;
 
   if (up) {
-    m_data[Chunk::Size + 1] |= up->m_data[1];
+    m_data[k_topBorder] |= up->m_data[1] & k_dataBits;
   }
 
   if (upLeft) {
-    m_data[Chunk::Size + 1] |=
-        (upLeft->m_data[1] << Chunk::Size) & LeftBorderBit;
+    m_data[k_topBorder] |= (upLeft->m_data[1] << k_size) & k_leftBorderBit;
   }
 
   if (upRight) {
-    m_data[Chunk::Size + 1] |=
-        (upRight->m_data[1] >> Chunk::Size) & RightBorderBit;
+    m_data[k_topBorder] |= (upRight->m_data[1] >> k_size) & k_rightBorderBit;
   }
 
   if (down) {
-    m_data[0] |= down->m_data[Chunk::Size];
+    m_data[k_bottomBorder] |= down->m_data[k_size] & k_dataBits;
   }
 
   if (downLeft) {
-    m_data[0] |=
-        (downLeft->m_data[Chunk::Size] << Chunk::Size) & LeftBorderBit;
+    m_data[k_bottomBorder] |=
+        (downLeft->m_data[k_size] << k_size) & k_leftBorderBit;
   }
 
   if (downRight) {
-    m_data[0] |=
-        (downRight->m_data[Chunk::Size] >> Chunk::Size) & RightBorderBit;
+    m_data[k_bottomBorder] |=
+        (downRight->m_data[k_size] >> k_size) & k_rightBorderBit;
   }
 
   if (left) {
-    for (int i = 1; i <= Chunk::Size; i++) {
-      m_data[i] |= (left->m_data[i] << Chunk::Size) & LeftBorderBit;
+    for (int i = 1; i <= k_size; i++) {
+      m_data[i] |= (left->m_data[i] << k_size) & k_leftBorderBit;
     }
   }
 
   if (right) {
-    for (int i = 1; i <= Chunk::Size; i++) {
-      m_data[i] |= (right->m_data[i] >> Chunk::Size) & RightBorderBit;
+    for (int i = 1; i <= k_size; i++) {
+      m_data[i] |= (right->m_data[i] >> k_size) & k_rightBorderBit;
     }
   }
 }
 
 void Chunk::processNextState() {
-  uint64_t top = m_data[Chunk::Size + 1];
+  uint64_t top = m_data[k_topBorder];
 
-  for (int y = Chunk::Size; y > 0; y--) {
+  for (int y = k_size; y > k_bottomBorder; y--) {
     uint64_t newVals = 0;
     uint64_t curr = m_data[y];
     uint64_t bot = m_data[y - 1];
-    for (int x = Chunk::Size - 1; x >= 0; x--) {
+    for (int x = Chunk::k_size - 1; x >= 0; x--) {
       uint32_t around = 0;
 
       // Top 3 bits
@@ -359,7 +370,8 @@ void Chunk::processNextState() {
 
       // std::cout << "(" << x << "," << (y - 1) << ") -> "
       //           << std::bitset<3>(around >> 6) << " "
-      //           << std::bitset<3>(around >> 3) << " " << std::bitset<3>(around)
+      //           << std::bitset<3>(around >> 3) << " " <<
+      //           std::bitset<3>(around)
       //           << " -> " << bitsToState[around]
       //           << std::endl;
 
@@ -376,9 +388,9 @@ void Chunk::processNextState() {
 bool Chunk::empty() {
   uint64_t val;
   // Skip top and bottom
-  for (int32_t i = 1; i <= Chunk::Size; i++) {
+  for (int32_t i = 1; i <= k_size; i++) {
     // Or with borders cleared
-    val |= (m_data[i] & DataBits);
+    val |= (m_data[i] & k_dataBits);
   }
 
   return val == 0;

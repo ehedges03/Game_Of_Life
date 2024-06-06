@@ -87,10 +87,12 @@ public:
 
   // I think this should size should be 6 bits under the type used in m_data for
   // each row.
-  static constexpr int32_t Size = 8;
-  static constexpr uint64_t LeftBorderBit = 1ul << (Size + 1);
-  static constexpr uint64_t RightBorderBit = 1ul;
-  static constexpr uint64_t DataBits = ((1ul << Size) - 1) << 1;
+  static constexpr int32_t k_size = 8;
+  static constexpr int32_t k_topBorder = k_size + 1;
+  static constexpr int32_t k_bottomBorder = 0;
+  static constexpr uint64_t k_leftBorderBit = 1ul << (k_size + 1);
+  static constexpr uint64_t k_rightBorderBit = 1ul;
+  static constexpr uint64_t k_dataBits = ((1ul << k_size) - 1) << 1;
 
   void processNextState();
   void readInBorder();
@@ -99,13 +101,13 @@ public:
   bool getCell(int32_t x, int32_t y);
   void setCell(int32_t x, int32_t y, bool val);
 
-  using iterator = typename std::array<uint64_t, Size + 2>::iterator;
+  using iterator = typename std::array<uint64_t, k_size + 2>::iterator;
   using reverse_iterator =
-      typename std::array<uint64_t, Size + 2>::reverse_iterator;
+      typename std::array<uint64_t, k_size + 2>::reverse_iterator;
   using const_iterator =
-      typename std::array<uint64_t, Size + 2>::const_iterator;
+      typename std::array<uint64_t, k_size + 2>::const_iterator;
   using const_reverse_iterator =
-      typename std::array<uint64_t, Size + 2>::const_reverse_iterator;
+      typename std::array<uint64_t, k_size + 2>::const_reverse_iterator;
 
   iterator begin() { return m_data.begin(); };
   const_iterator begin() const { return m_data.begin(); };
@@ -122,5 +124,5 @@ public:
   friend std::ostream &operator<<(std::ostream &o, Chunk &c);
 
 private:
-  std::array<uint64_t, Size + 2> m_data {};
+  std::array<uint64_t, k_size + 2> m_data {};
 };
