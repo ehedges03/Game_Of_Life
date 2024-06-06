@@ -1,5 +1,6 @@
 #include <cstdint>
 #include <iostream>
+#include <stdlib.h>
 
 namespace Console {
 
@@ -32,7 +33,13 @@ public:
 
 class Screen {
 public:
-  static void clear() { std::cout << "\033[2J" << std::flush; }
+  static void clear() { 
+#ifdef _WIN32
+      system("CLS");
+#else
+      std::cout << "\033[2J" << std::flush; // everything else is .. . bash (?)
+#endif
+  }
 
   static void eraseToEndOfLine() { std::cout << "\033[K" << std::flush; }
 };

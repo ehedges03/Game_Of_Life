@@ -4,7 +4,7 @@
 #include <iostream>
 #include <utility>
 
-static const std::array<bool, 512> createBitsToStateMap() {
+constexpr std::array<bool, 512> createBitsToStateMap() {
   std::array<bool, 512> map;
   for (int16_t i = 0; i <= 0b111111111; i++) {
     uint8_t neighbor_count = 0;
@@ -261,9 +261,9 @@ std::ostream &operator<<(std::ostream &o, Chunk &c) {
     std::bitset<Chunk::Size + 2> row(c.m_data[y]);
     for (int x = Chunk::Size + 1; x >= 0; x--) {
       if (row[x]) {
-        o << "▓";
+        o << "O";
       } else {
-        o << "0";
+        o << "/";
       }
     }
     Console::Cursor::down(1);
@@ -376,7 +376,7 @@ void Chunk::processNextState() {
 bool Chunk::empty() {
   uint64_t val;
   // Skip top and bottom
-  for (int32_t i = 1; i <= Size; i++) {
+  for (int32_t i = 1; i <= Chunk::Size; i++) {
     // Or with borders cleared
     val |= (m_data[i] & DataBits);
   }
