@@ -6,11 +6,10 @@
 #include <limits>
 #include <memory>
 #include <unordered_map>
-#include <utility>
 
 struct ChunkKey {
   ChunkKey(int32_t x, int32_t y) : x(x), y(y) {}
-  ChunkKey(std::pair<int32_t, int32_t> p) : x(p.first), y(p.second) {}
+  ChunkKey(std::array<int32_t, 2> p) : x(p[0]), y(p[1]) {}
 
   int32_t x;
   int32_t y;
@@ -18,7 +17,6 @@ struct ChunkKey {
   bool operator==(ChunkKey &key) {
     return this->x == key.x && this->y == key.y;
   }
-
   bool operator==(const ChunkKey &key) const {
     return this->x == key.x && this->y == key.y;
   }
@@ -66,12 +64,14 @@ private:
    * with.
    */
   ChunkKey calcChunkKey(int32_t x, int32_t y);
+  void makeChunk(ChunkKey key);
   /**
-   * Checks a given chunk to see if it is empty and if it is removes it.
+   * Delets a given chunk with its data and key
    */
-  void checkChunk(ChunkKey key, std::shared_ptr<Chunk> c);
+  void deleteChunk(ChunkKey key, std::shared_ptr<Chunk> c);
   std::shared_ptr<Chunk> getChunk(ChunkKey key);
   std::shared_ptr<Chunk> getOrMakeChunk(ChunkKey key);
+  void makeBorderChunks(ChunkKey key, std::shared_ptr<Chunk> c);
 };
 
 class Chunk {
@@ -83,7 +83,9 @@ public:
     EMPTY = 1,
     // Flag specifying that one or more of the surrounding border chunks does
     // not exist
-    MISSING_BORDER = 1 << 1,
+    MISSING_BORDER_CHUNK = 1 << 1,
+    // Flag specifying if all surrounding border chunks are empty
+    ALL_BORDERS_EMPTY = 1 << 2,
   };
 
   std::shared_ptr<Chunk> upLeft;
@@ -106,14 +108,9 @@ public:
 
   // I am not sure if this should return the chunks Flags, maybe there should
   // just be a function called getFlags() or maybe both?
-  Flags processNextState();
+  void processNextState();
   void readInBorder();
-  // I am not sure what to do with this function, maybe it should be private
-  // because I have a flag that can be used instead to figure out if the chunk
-  // is empty and then this function can be run at the end of processing a chunk
-  // and then set the flag accordingly allowing it to only be processed once. It
-  // is not particulalry intensive to process
-  bool empty();
+  Flags getFlags() { return m_flags; }
 
   bool getCell(int32_t x, int32_t y);
   void setCell(int32_t x, int32_t y, bool val);
@@ -141,8 +138,10 @@ public:
   friend std::ostream &operator<<(std::ostream &o, Chunk &c);
 
 private:
-  Flags m_flags = Flags::CLEAR;
+  Flags m_flags = Flags::EMPTY;
   std::array<uint64_t, k_size + 2> m_data{};
+
+  void processEmpty();
 };
 
 inline Chunk::Flags operator~(Chunk::Flags a) {

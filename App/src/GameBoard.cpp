@@ -79,6 +79,19 @@ bool GameBoard::getPoint(int32_t x, int32_t y) {
 }
 
 void GameBoard::update() {
+  // Check chunks for deletion
+
+  // Check if chunks need to be created
+  for (auto &chunkPair : m_chunks) {
+    Chunk::Flags flags = chunkPair.second->getFlags();
+
+    // Check that the chunk is not empty and has missing border chunks
+    if ((flags & (Chunk::Flags::EMPTY | Chunk::Flags::MISSING_BORDER_CHUNK)) ==
+        Chunk::Flags::MISSING_BORDER_CHUNK) {
+      makeBorderChunks(chunkPair.first, chunkPair.second);
+    }
+  }
+
   // Setup the border for all chunks
   for (auto &chunkPair : m_chunks) {
     chunkPair.second->readInBorder();
@@ -90,8 +103,8 @@ void GameBoard::update() {
   }
 }
 
-void GameBoard::checkChunk(ChunkKey key, std::shared_ptr<Chunk> c) {
-  if (!c || !c->empty())
+void GameBoard::deleteChunk(ChunkKey key, std::shared_ptr<Chunk> c) {
+  if (!c)
     return;
 
   if (c->upLeft)
@@ -148,11 +161,11 @@ std::shared_ptr<Chunk> GameBoard::getChunk(ChunkKey key) {
   return chunk_entry->second;
 }
 
-std::shared_ptr<Chunk> GameBoard::getOrMakeChunk(ChunkKey key) {
+void GameBoard::makeChunk(ChunkKey key) {
   std::shared_ptr<Chunk> chunk = getChunk(key);
 
   if (chunk) {
-    return chunk;
+    return;
   }
 
   // Update the boundaries of the GameBoard
@@ -164,6 +177,7 @@ std::shared_ptr<Chunk> GameBoard::getOrMakeChunk(ChunkKey key) {
   chunk = std::make_shared<Chunk>();
   m_chunks[key] = chunk;
 
+  // Get all border chunks into the references
   chunk->upLeft = getChunk({key.x - 1, key.y + 1});
   chunk->up = getChunk({key.x, key.y + 1});
   chunk->upRight = getChunk({key.x + 1, key.y + 1});
@@ -173,6 +187,7 @@ std::shared_ptr<Chunk> GameBoard::getOrMakeChunk(ChunkKey key) {
   chunk->down = getChunk({key.x, key.y - 1});
   chunk->downRight = getChunk({key.x + 1, key.y - 1});
 
+  // For each border chunk reference this chunk in it
   if (chunk->upLeft)
     chunk->upLeft->downRight = chunk;
 
@@ -196,11 +211,58 @@ std::shared_ptr<Chunk> GameBoard::getOrMakeChunk(ChunkKey key) {
 
   if (chunk->downRight)
     chunk->downRight->upLeft = chunk;
-
-  return chunk;
 }
 
-#define VISUALIZE_BORDERS true
+void GameBoard::makeBorderChunks(ChunkKey key, std::shared_ptr<Chunk> c) {
+  if (!c->upLeft) {
+    makeChunk({key.x - 1, key.y + 1});
+  }
+
+  if (!c->up) {
+    makeChunk({key.x, key.y + 1});
+  }
+
+  if (!c->upRight) {
+    makeChunk({key.x + 1, key.y + 1});
+  }
+
+  if (!c->left) {
+    makeChunk({key.x - 1, key.y});
+  }
+
+  if (!c->right) {
+    makeChunk({key.x + 1, key.y});
+  }
+
+  if (!c->downLeft) {
+    makeChunk({key.x - 1, key.y - 1});
+  }
+
+  if (!c->down) {
+    makeChunk({key.x, key.y - 1});
+  }
+
+  if (!c->downRight) {
+    makeChunk({key.x + 1, key.y - 1});
+  }
+}
+
+std::shared_ptr<Chunk> GameBoard::getOrMakeChunk(ChunkKey key) {
+  std::shared_ptr<Chunk> chunk = getChunk(key);
+
+  if (chunk) {
+    return chunk;
+  }
+
+  makeChunk(key);
+
+  return m_chunks[key];
+}
+
+#define VISUALIZE_BORDERS 0
+#define VISUALIZE_DEFAULT 1
+#define VISUALIZE VISUALIZE_DEFAULT
+#define PRINT_GB true
 
 // These have to be able to print as one character wide otherwise it will break
 // the print
@@ -217,11 +279,12 @@ std::shared_ptr<Chunk> GameBoard::getOrMakeChunk(ChunkKey key) {
 #endif
 
 std::ostream &operator<<(std::ostream &o, GameBoard &g) {
+#if PRINT_GB
   Chunk defaultEmpty;
   Console::Screen::clear();
   Console::Cursor::setPosition(0, 0);
 
-#if VISUALIZE_BORDERS
+#if VISUALIZE == VISUALIZE_BORDERS
   for (int32_t y = g.m_maxY; y >= g.m_minY; y--) {
     for (int32_t x = g.m_minX; x <= g.m_maxX; x++) {
       if (g.m_chunks.find({x, y}) != g.m_chunks.end()) {
@@ -235,7 +298,9 @@ std::ostream &operator<<(std::ostream &o, GameBoard &g) {
     Console::Cursor::down(Chunk::k_size + 2);
     std::cout << std::endl;
   }
-#else
+#endif
+
+#if VISUALIZE == VISUALIZE_DEFAULT
   for (int32_t y = g.m_maxY; y >= g.m_minY; y--) {
     for (int32_t x = g.m_minX; x <= g.m_maxX; x++) {
       if (g.m_chunks.find({x, y}) != g.m_chunks.end()) {
@@ -252,6 +317,8 @@ std::ostream &operator<<(std::ostream &o, GameBoard &g) {
 
 #endif
 
+#endif
+
   o << std::endl;
 
   o << "X: (" << g.m_minX << ")-(" << g.m_maxX << ") | Y: (" << g.m_minY
@@ -262,7 +329,7 @@ std::ostream &operator<<(std::ostream &o, GameBoard &g) {
 }
 
 std::ostream &operator<<(std::ostream &o, Chunk &c) {
-#if VISUALIZE_BORDERS
+#if VISUALIZE == VISUALIZE_BORDERS
   // Make sure that the border is read in before rendering it out
   c.readInBorder();
 
@@ -278,7 +345,9 @@ std::ostream &operator<<(std::ostream &o, Chunk &c) {
     Console::Cursor::down(1);
     Console::Cursor::backward(Chunk::k_size + 2);
   }
-#else
+#endif
+
+#if VISUALIZE == VISUALIZE_DEFAULT
   for (int32_t y = Chunk::k_size; y > 0; y--) {
     std::bitset<Chunk::k_size> row((c.m_data[y] & Chunk::k_dataBits) >> 1);
     for (int x = Chunk::k_size - 1; x >= 0; x--) {
@@ -308,6 +377,11 @@ bool Chunk::getCell(int32_t x, int32_t y) {
 void Chunk::setCell(int32_t x, int32_t y, bool val) {
   uint64_t loc = 1ul << (k_size - x);
   if (val) {
+    // When the user sets a cell in a chunk assume that the chunk is no longer
+    // empty and that there are missing border chunks to simplify intial start
+    m_flags &= ~Flags::EMPTY;
+    m_flags |= Flags::MISSING_BORDER_CHUNK;
+
     m_data[y + 1] |= loc;
   } else {
     m_data[y + 1] &= ~loc;
@@ -320,66 +394,81 @@ void Chunk::readInBorder() {
   }
   m_data[k_topBorder] = 0;
   m_data[k_bottomBorder] = 0;
-
-  // Clear the missing border chunk flag
-  m_flags &= ~Flags::MISSING_BORDER;
+  // This will be added to each time and if there are not 8 then there is a
+  // missing border chunk
+  int32_t borderingChunks = 0;
+  // This will be anded with all chunks flags and if any of them are not empty
+  // this will be false
+  int32_t allBordersEmpty = Flags::EMPTY;
 
   if (up) {
     m_data[k_topBorder] |= up->m_data[1] & k_dataBits;
-  } else {
-    m_flags |= Flags::MISSING_BORDER;
+    allBordersEmpty &= up->m_flags;
+    borderingChunks++;
   }
 
   if (upLeft) {
     m_data[k_topBorder] |= (upLeft->m_data[1] << k_size) & k_leftBorderBit;
-  } else {
-    m_flags |= Flags::MISSING_BORDER;
+    allBordersEmpty &= upLeft->m_flags;
+    borderingChunks++;
   }
 
   if (upRight) {
     m_data[k_topBorder] |= (upRight->m_data[1] >> k_size) & k_rightBorderBit;
-  } else {
-    m_flags |= Flags::MISSING_BORDER;
+    allBordersEmpty &= upRight->m_flags;
+    borderingChunks++;
   }
 
   if (down) {
     m_data[k_bottomBorder] |= down->m_data[k_size] & k_dataBits;
-  } else {
-    m_flags |= Flags::MISSING_BORDER;
+    allBordersEmpty &= down->m_flags;
+    borderingChunks++;
   }
 
   if (downLeft) {
     m_data[k_bottomBorder] |=
         (downLeft->m_data[k_size] << k_size) & k_leftBorderBit;
-  } else {
-    m_flags |= Flags::MISSING_BORDER;
+    allBordersEmpty &= downLeft->m_flags;
+    borderingChunks++;
   }
 
   if (downRight) {
     m_data[k_bottomBorder] |=
         (downRight->m_data[k_size] >> k_size) & k_rightBorderBit;
-  } else {
-    m_flags |= Flags::MISSING_BORDER;
+    allBordersEmpty &= downRight->m_flags;
+    borderingChunks++;
   }
 
   if (left) {
     for (int i = 1; i <= k_size; i++) {
       m_data[i] |= (left->m_data[i] << k_size) & k_leftBorderBit;
     }
-  } else {
-    m_flags |= Flags::MISSING_BORDER;
+    allBordersEmpty &= left->m_flags;
+    borderingChunks++;
   }
 
   if (right) {
     for (int i = 1; i <= k_size; i++) {
       m_data[i] |= (right->m_data[i] >> k_size) & k_rightBorderBit;
     }
+    allBordersEmpty &= right->m_flags;
+    borderingChunks++;
+  }
+
+  if (allBordersEmpty) {
+    m_flags |= Flags::ALL_BORDERS_EMPTY;
   } else {
-    m_flags |= Flags::MISSING_BORDER;
+    m_flags &= ~Flags::ALL_BORDERS_EMPTY;
+  }
+
+  if (borderingChunks != 8) {
+    m_flags |= Flags::MISSING_BORDER_CHUNK;
+  } else {
+    m_flags &= ~Flags::MISSING_BORDER_CHUNK;
   }
 }
 
-Chunk::Flags Chunk::processNextState() {
+void Chunk::processNextState() {
   if (m_flags & Flags::EMPTY) {
     // Logic for if the border will spawn any cells or not
     uint64_t top = m_data[k_topBorder];
@@ -411,7 +500,7 @@ Chunk::Flags Chunk::processNextState() {
     }
 
     if (!spawnFromBorder) {
-      return m_flags;
+      // return;
     }
   }
 
@@ -449,16 +538,22 @@ Chunk::Flags Chunk::processNextState() {
     m_data[y] = newVals;
   }
 
-  return m_flags;
+  processEmpty();
+
+  return;
 }
 
-bool Chunk::empty() {
-  uint64_t val;
+void Chunk::processEmpty() {
+  uint64_t val = 0;
   // Skip top and bottom
   for (int32_t i = 1; i <= k_size; i++) {
     // Or with borders cleared
     val |= (m_data[i] & k_dataBits);
   }
 
-  return val == 0;
+  if (val == 0) {
+    m_flags |= Flags::EMPTY;
+  } else {
+    m_flags &= ~Flags::EMPTY;
+  }
 };
