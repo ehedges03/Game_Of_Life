@@ -80,6 +80,18 @@ bool GameBoard::getPoint(int32_t x, int32_t y) {
 
 void GameBoard::update() {
   // Check chunks for deletion
+  for (auto it = m_chunks.begin(); it != m_chunks.end();) {
+    Chunk::Flags flags = it->second->getFlags();
+
+    // Check that the chunk is empty and all borders are empty
+    if ((flags & (Chunk::Flags::EMPTY | Chunk::Flags::ALL_BORDERS_EMPTY)) ==
+        (Chunk::Flags::EMPTY | Chunk::Flags::ALL_BORDERS_EMPTY)) {
+      deleteChunkBorders(it->second);
+      it = m_chunks.erase(it);
+    } else {
+      it++;
+    }
+  }
 
   // Check if chunks need to be created
   for (auto &chunkPair : m_chunks) {
@@ -103,7 +115,7 @@ void GameBoard::update() {
   }
 }
 
-void GameBoard::deleteChunk(ChunkKey key, std::shared_ptr<Chunk> c) {
+void GameBoard::deleteChunkBorders(std::shared_ptr<Chunk> c) {
   if (!c)
     return;
 
@@ -130,8 +142,6 @@ void GameBoard::deleteChunk(ChunkKey key, std::shared_ptr<Chunk> c) {
 
   if (c->downRight)
     c->downRight->upLeft = nullptr;
-
-  m_chunks.erase(key);
 }
 
 ChunkKey GameBoard::calcChunkKey(int32_t x, int32_t y) {
@@ -167,12 +177,6 @@ void GameBoard::makeChunk(ChunkKey key) {
   if (chunk) {
     return;
   }
-
-  // Update the boundaries of the GameBoard
-  m_maxX = std::max(key.x, m_maxX);
-  m_minX = std::min(key.x, m_minX);
-  m_maxY = std::max(key.y, m_maxY);
-  m_minY = std::min(key.y, m_minY);
 
   chunk = std::make_shared<Chunk>();
   m_chunks[key] = chunk;
@@ -279,6 +283,22 @@ std::shared_ptr<Chunk> GameBoard::getOrMakeChunk(ChunkKey key) {
 #endif
 
 std::ostream &operator<<(std::ostream &o, GameBoard &g) {
+  int32_t maxX = std::numeric_limits<int32_t>::min();
+  int32_t minX = std::numeric_limits<int32_t>::max();
+  int32_t maxY = std::numeric_limits<int32_t>::min();
+  int32_t minY = std::numeric_limits<int32_t>::max();
+
+  // Setup the border for all chunks
+  for (auto &chunkPair : g.m_chunks) {
+    ChunkKey k = chunkPair.first;
+
+    // Update the boundaries of the GameBoard
+    maxX = std::max(k.x, maxX);
+    minX = std::min(k.x, minX);
+    maxY = std::max(k.y, maxY);
+    minY = std::min(k.y, minY);
+  }
+
 #if PRINT_GB
   Chunk defaultEmpty;
   Console::Screen::clear();
@@ -301,8 +321,8 @@ std::ostream &operator<<(std::ostream &o, GameBoard &g) {
 #endif
 
 #if VISUALIZE == VISUALIZE_DEFAULT
-  for (int32_t y = g.m_maxY; y >= g.m_minY; y--) {
-    for (int32_t x = g.m_minX; x <= g.m_maxX; x++) {
+  for (int32_t y = maxY; y >= minY; y--) {
+    for (int32_t x = minX; x <= maxX; x++) {
       if (g.m_chunks.find({x, y}) != g.m_chunks.end()) {
         o << *g.m_chunks.at({x, y}) << std::flush;
       } else {
@@ -321,8 +341,8 @@ std::ostream &operator<<(std::ostream &o, GameBoard &g) {
 
   o << std::endl;
 
-  o << "X: (" << g.m_minX << ")-(" << g.m_maxX << ") | Y: (" << g.m_minY
-    << ")-(" << g.m_maxY << ")" << std::endl;
+  o << "X: (" << minX << ")-(" << maxX << ") | Y: (" << minY << ")-(" << maxY
+    << ")" << std::endl;
   o << "Total Chunks: " << g.m_chunks.size() << std::endl;
 
   return o;

@@ -109,7 +109,7 @@ void simpleGameBoardTest() {
 
     std::cout << gb << std::flush;
     std::cout << "Last run time: " << lastTimeMS
-              << " ms | Total run time: " << (totalTimeMS / runs) << " ms"
+              << " ms | Avg run time: " << (totalTimeMS / runs) << " ms"
               << std::endl;
     std::cin.get(input);
   }

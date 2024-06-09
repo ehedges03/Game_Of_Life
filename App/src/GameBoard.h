@@ -54,11 +54,6 @@ private:
 
   std::unordered_map<ChunkKey, std::shared_ptr<Chunk>, ChunkKeyHash> m_chunks;
 
-  int32_t m_maxX = std::numeric_limits<int32_t>::min();
-  int32_t m_minX = std::numeric_limits<int32_t>::max();
-  int32_t m_maxY = std::numeric_limits<int32_t>::min();
-  int32_t m_minY = std::numeric_limits<int32_t>::max();
-
   /**
    * Take a general (x,y) coordinate and find the chunk that it cooresponds
    * with.
@@ -66,9 +61,9 @@ private:
   ChunkKey calcChunkKey(int32_t x, int32_t y);
   void makeChunk(ChunkKey key);
   /**
-   * Delets a given chunk with its data and key
+   * Delets a given chunk's border connections
    */
-  void deleteChunk(ChunkKey key, std::shared_ptr<Chunk> c);
+  void deleteChunkBorders(std::shared_ptr<Chunk> c);
   std::shared_ptr<Chunk> getChunk(ChunkKey key);
   std::shared_ptr<Chunk> getOrMakeChunk(ChunkKey key);
   void makeBorderChunks(ChunkKey key, std::shared_ptr<Chunk> c);
