@@ -1,6 +1,7 @@
 #include "GameBoard.h"
 #include "Utils/Console.h"
 #include <bitset>
+#include <chrono>
 #include <iostream>
 #include <utility>
 
@@ -28,8 +29,10 @@ static const std::array<bool, 512> bitsToState = createBitsToStateMap();
 constexpr std::array<bool, 256> createThreeConsecBitInByteMap() {
   std::array<bool, 256> map{};
 
-  for (int i = 0b111; i <= 0b11100000; i <<= 1) {
-    map[i] = true;
+  for (int val = 0b111; val <= 0xFF; val = (val << 1) | 1) {
+    for (int i = val; i <= 0xFF; i <<= 1) {
+      map[i] = true;
+    }
   }
 
   return map;
@@ -39,6 +42,29 @@ constexpr std::array<bool, 256> createThreeConsecBitInByteMap() {
 // map Which takes in a byte and tells you if there are 3 consecutive bits in
 // that byte pretty self explanatory ¯\_(ツ)_/¯
 static const std::array<bool, 256> tcbibm = createThreeConsecBitInByteMap();
+
+constexpr std::array<bool, 32> createCornerMap() {
+  std::array<bool, 32> map{};
+
+  for (int16_t i = 0; i <= 0b11111; i++) {
+    int16_t current = i;
+    int8_t count = 0;
+    while (current > 0) {
+      if (current & 0b1) {
+        count++;
+      }
+
+      current >>= 1;
+    }
+
+    map[i] = count >= 3;
+  }
+
+  return map;
+}
+
+// Map of byte to the number of bits in it
+static const std::array<bool, 32> cornerMap = createCornerMap();
 
 /*
 GameBoard method definitions
@@ -79,6 +105,8 @@ bool GameBoard::getPoint(int32_t x, int32_t y) {
 }
 
 void GameBoard::update() {
+
+  auto start = std::chrono::steady_clock::now();
   // Check chunks for deletion
   for (auto it = m_chunks.begin(); it != m_chunks.end();) {
     Chunk::Flags flags = it->second->getFlags();
@@ -92,7 +120,15 @@ void GameBoard::update() {
       it++;
     }
   }
+  auto end = std::chrono::steady_clock::now();
+  std::cout << "\nDelete Time: "
+            << (std::chrono::duration_cast<std::chrono::nanoseconds>(end -
+                                                                     start)
+                    .count() /
+                1000.0f)
+            << "Micro Seconds" << std::endl;
 
+  start = std::chrono::steady_clock::now();
   // Check if chunks need to be created
   for (auto &chunkPair : m_chunks) {
     Chunk::Flags flags = chunkPair.second->getFlags();
@@ -103,16 +139,39 @@ void GameBoard::update() {
       makeBorderChunks(chunkPair.first, chunkPair.second);
     }
   }
+  end = std::chrono::steady_clock::now();
+  std::cout << "Create Time: "
+            << (std::chrono::duration_cast<std::chrono::nanoseconds>(end -
+                                                                     start)
+                    .count() /
+                1000.0f)
+            << "Micro Seconds" << std::endl;
 
+  start = std::chrono::steady_clock::now();
   // Setup the border for all chunks
   for (auto &chunkPair : m_chunks) {
     chunkPair.second->readInBorder();
   }
+  end = std::chrono::steady_clock::now();
+  std::cout << "Read Borders Time: "
+            << (std::chrono::duration_cast<std::chrono::nanoseconds>(end -
+                                                                     start)
+                    .count() /
+                1000.0f)
+            << "Micro Seconds" << std::endl;
 
+  start = std::chrono::steady_clock::now();
   // Process the chunks
   for (auto &chunkPair : m_chunks) {
     chunkPair.second->processNextState();
   }
+  end = std::chrono::steady_clock::now();
+  std::cout << "Process Time: "
+            << (std::chrono::duration_cast<std::chrono::nanoseconds>(end -
+                                                                     start)
+                    .count() /
+                1000.0f)
+            << " Micro Seconds" << std::endl;
 }
 
 void GameBoard::deleteChunkBorders(std::shared_ptr<Chunk> c) {
@@ -265,8 +324,8 @@ std::shared_ptr<Chunk> GameBoard::getOrMakeChunk(ChunkKey key) {
 
 #define VISUALIZE_BORDERS 0
 #define VISUALIZE_DEFAULT 1
-#define VISUALIZE VISUALIZE_DEFAULT
-#define PRINT_GB true
+#define VISUALIZE VISUALIZE_BORDERS
+#define PRINT_GB false
 
 // These have to be able to print as one character wide otherwise it will break
 // the print
@@ -301,12 +360,13 @@ std::ostream &operator<<(std::ostream &o, GameBoard &g) {
 
 #if PRINT_GB
   Chunk defaultEmpty;
+  o << std::endl;
   Console::Screen::clear();
   Console::Cursor::setPosition(0, 0);
 
 #if VISUALIZE == VISUALIZE_BORDERS
-  for (int32_t y = g.m_maxY; y >= g.m_minY; y--) {
-    for (int32_t x = g.m_minX; x <= g.m_maxX; x++) {
+  for (int32_t y = maxY; y >= minY; y--) {
+    for (int32_t x = minX; x <= maxX; x++) {
       if (g.m_chunks.find({x, y}) != g.m_chunks.end()) {
         o << *g.m_chunks.at({x, y}) << std::flush;
       } else {
@@ -491,10 +551,10 @@ void Chunk::readInBorder() {
 void Chunk::processNextState() {
   if (m_flags & Flags::EMPTY) {
     // Logic for if the border will spawn any cells or not
-    uint64_t top = m_data[k_topBorder];
-    uint64_t bottom = m_data[k_bottomBorder];
-    uint64_t left = 0;
-    uint64_t right = 0;
+    RowType top = m_data[k_topBorder];
+    RowType bottom = m_data[k_bottomBorder];
+    RowType left = 0;
+    RowType right = 0;
 
     for (int i = k_bottomBorder; i <= k_topBorder; i++) {
       right <<= 1;
@@ -507,7 +567,13 @@ void Chunk::processNextState() {
     // The + 2 is for the border and the + 3 is to round up the calculation
     constexpr int32_t nibbles = ((k_size + 2) + 3) / 4;
 
-    bool spawnFromBorder = false;
+    bool br = cornerMap[((right >> (k_size - 1)) | (bottom << 2)) & 0x1F];
+    bool bl = cornerMap[((bottom >> (k_size - 1)) | (left << 2)) & 0x1F];
+    bool tr = cornerMap[((top << 2) | (right >> 1)) & 0x1F];
+    bool tl = cornerMap[(((top >> 2) | (left << 1)) >> (k_size - 3)) & 0x1F];
+
+
+    bool spawnFromBorder = br | bl | tr | tl;
 
     for (int i = 0; i < nibbles && !spawnFromBorder; i++) {
       spawnFromBorder = tcbibm[top & 0xFF] || tcbibm[bottom & 0xFF] ||
@@ -520,7 +586,7 @@ void Chunk::processNextState() {
     }
 
     if (!spawnFromBorder) {
-      // return;
+      return;
     }
   }
 

@@ -71,6 +71,8 @@ private:
 
 class Chunk {
 public:
+  using RowType = uint32_t;
+
   enum Flags : uint32_t {
     CLEAR = 0,
     // Flag specifying that the chunk is currently empty better to just check
@@ -83,6 +85,15 @@ public:
     ALL_BORDERS_EMPTY = 1 << 2,
   };
 
+  // I think this should size should be 6 bits under the type used in m_data for
+  // each row.
+  static constexpr int32_t k_size = 8;
+  static constexpr int32_t k_topBorder = k_size + 1;
+  static constexpr int32_t k_bottomBorder = 0;
+  static constexpr RowType k_leftBorderBit = 1ul << (k_size + 1);
+  static constexpr RowType k_rightBorderBit = 1ul;
+  static constexpr RowType k_dataBits = ((1ul << k_size) - 1) << 1;
+
   std::shared_ptr<Chunk> upLeft;
   std::shared_ptr<Chunk> up;
   std::shared_ptr<Chunk> upRight;
@@ -91,15 +102,6 @@ public:
   std::shared_ptr<Chunk> downLeft;
   std::shared_ptr<Chunk> down;
   std::shared_ptr<Chunk> downRight;
-
-  // I think this should size should be 6 bits under the type used in m_data for
-  // each row.
-  static constexpr int32_t k_size = 8;
-  static constexpr int32_t k_topBorder = k_size + 1;
-  static constexpr int32_t k_bottomBorder = 0;
-  static constexpr uint64_t k_leftBorderBit = 1ul << (k_size + 1);
-  static constexpr uint64_t k_rightBorderBit = 1ul;
-  static constexpr uint64_t k_dataBits = ((1ul << k_size) - 1) << 1;
 
   // I am not sure if this should return the chunks Flags, maybe there should
   // just be a function called getFlags() or maybe both?
@@ -110,13 +112,13 @@ public:
   bool getCell(int32_t x, int32_t y);
   void setCell(int32_t x, int32_t y, bool val);
 
-  using iterator = typename std::array<uint64_t, k_size + 2>::iterator;
+  using iterator = typename std::array<RowType, k_size + 2>::iterator;
   using reverse_iterator =
-      typename std::array<uint64_t, k_size + 2>::reverse_iterator;
+      typename std::array<RowType, k_size + 2>::reverse_iterator;
   using const_iterator =
-      typename std::array<uint64_t, k_size + 2>::const_iterator;
+      typename std::array<RowType, k_size + 2>::const_iterator;
   using const_reverse_iterator =
-      typename std::array<uint64_t, k_size + 2>::const_reverse_iterator;
+      typename std::array<RowType, k_size + 2>::const_reverse_iterator;
 
   iterator begin() { return m_data.begin(); };
   const_iterator begin() const { return m_data.begin(); };
@@ -134,7 +136,7 @@ public:
 
 private:
   Flags m_flags = Flags::EMPTY;
-  std::array<uint64_t, k_size + 2> m_data{};
+  std::array<RowType, k_size + 2> m_data{};
 
   void processEmpty();
 };

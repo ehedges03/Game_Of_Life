@@ -1,1 +1,21 @@
-[]
+[
+  {
+    "arguments": [
+      "/usr/bin/clang++",
+      "-DRELEASE",
+      "-Isrc",
+      "-I../Libraries/src",
+      "-m64",
+      "-O2",
+      "-g",
+      "-std=c++20",
+      "-c",
+      "-o",
+      "../Binaries/Intermediates/linux-x86_64/Release/App/GameBoard.o",
+      "src/GameBoard.cpp"
+    ],
+    "directory": "/home/ehedges/Personal/Game_Of_Life/App",
+    "file": "/home/ehedges/Personal/Game_Of_Life/App/src/GameBoard.cpp",
+    "output": "/home/ehedges/Personal/Game_Of_Life/Binaries/Intermediates/linux-x86_64/Release/App/GameBoard.o"
+  }
+]

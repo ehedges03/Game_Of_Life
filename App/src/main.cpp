@@ -45,12 +45,12 @@ void simpleBitArrayTest() {
 constexpr std::array<std::bitset<8>, 8> chunkStart = {
     0b00000000, 
     0b00000000, 
-    0b00000000,
-    0b00000000, 
-    0b00000000, 
-    0b01100000,
-    0b10100000, 
+    0b00000010,
+    0b00001011, 
+    0b00001010, 
+    0b00001000,
     0b00100000, 
+    0b10100000, 
 };
 // clang-format on
 
@@ -92,26 +92,27 @@ void simpleGameBoardTest() {
   std::cout << gb << std::endl;
   std::cin.get(input);
 
-  double lastTimeMS = 0, totalTimeMS = 0;
-  int runs = 0;
+  double lastTimeMuS = 0, averageTimeMuS = 0;
+  uint32_t runs = 0;
 
   while (input != 'q') {
     auto start = std::chrono::steady_clock::now();
     gb.update();
     auto end = std::chrono::steady_clock::now();
 
-    lastTimeMS =
-        std::chrono::duration_cast<std::chrono::microseconds>(end - start)
-            .count() /
-        1000.0f;
-    totalTimeMS += lastTimeMS;
+    lastTimeMuS =
+        std::chrono::duration_cast<std::chrono::nanoseconds>(end - start)
+            .count() / 1000.0f;
     runs++;
+    averageTimeMuS = ((runs - 1) * averageTimeMuS + lastTimeMuS) / runs;
 
-    std::cout << gb << std::flush;
-    std::cout << "Last run time: " << lastTimeMS
-              << " ms | Avg run time: " << (totalTimeMS / runs) << " ms"
-              << std::endl;
-    std::cin.get(input);
+    if (runs % 10000 == 0) {
+      std::cout << gb << std::flush;
+      std::cout << "Run " << runs << " | Time: " << lastTimeMuS
+                << " micro sec | Avg time: " << (averageTimeMuS) << " micro sec"
+                << std::endl;
+      std::cin.get(input);
+    }
   }
 }
 
