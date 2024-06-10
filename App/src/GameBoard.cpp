@@ -1,9 +1,9 @@
 #include "GameBoard.h"
 #include "Utils/Console.h"
 #include <bitset>
-#include <chrono>
 #include <iostream>
 #include <utility>
+#include <limits>
 
 constexpr std::array<bool, 512> createBitsToStateMap() {
   std::array<bool, 512> map;
@@ -106,7 +106,6 @@ bool GameBoard::getPoint(int32_t x, int32_t y) {
 
 void GameBoard::update() {
 
-  auto start = std::chrono::steady_clock::now();
   // Check chunks for deletion
   for (auto it = m_chunks.begin(); it != m_chunks.end();) {
     Chunk::Flags flags = it->second->getFlags();
@@ -120,15 +119,7 @@ void GameBoard::update() {
       it++;
     }
   }
-  auto end = std::chrono::steady_clock::now();
-  std::cout << "\nDelete Time: "
-            << (std::chrono::duration_cast<std::chrono::nanoseconds>(end -
-                                                                     start)
-                    .count() /
-                1000.0f)
-            << "Micro Seconds" << std::endl;
 
-  start = std::chrono::steady_clock::now();
   // Check if chunks need to be created
   for (auto &chunkPair : m_chunks) {
     Chunk::Flags flags = chunkPair.second->getFlags();
@@ -139,39 +130,16 @@ void GameBoard::update() {
       makeBorderChunks(chunkPair.first, chunkPair.second);
     }
   }
-  end = std::chrono::steady_clock::now();
-  std::cout << "Create Time: "
-            << (std::chrono::duration_cast<std::chrono::nanoseconds>(end -
-                                                                     start)
-                    .count() /
-                1000.0f)
-            << "Micro Seconds" << std::endl;
 
-  start = std::chrono::steady_clock::now();
   // Setup the border for all chunks
   for (auto &chunkPair : m_chunks) {
     chunkPair.second->readInBorder();
   }
-  end = std::chrono::steady_clock::now();
-  std::cout << "Read Borders Time: "
-            << (std::chrono::duration_cast<std::chrono::nanoseconds>(end -
-                                                                     start)
-                    .count() /
-                1000.0f)
-            << "Micro Seconds" << std::endl;
 
-  start = std::chrono::steady_clock::now();
   // Process the chunks
   for (auto &chunkPair : m_chunks) {
     chunkPair.second->processNextState();
   }
-  end = std::chrono::steady_clock::now();
-  std::cout << "Process Time: "
-            << (std::chrono::duration_cast<std::chrono::nanoseconds>(end -
-                                                                     start)
-                    .count() /
-                1000.0f)
-            << " Micro Seconds" << std::endl;
 }
 
 void GameBoard::deleteChunkBorders(std::shared_ptr<Chunk> c) {
@@ -321,11 +289,6 @@ std::shared_ptr<Chunk> GameBoard::getOrMakeChunk(ChunkKey key) {
 
   return m_chunks[key];
 }
-
-#define VISUALIZE_BORDERS 0
-#define VISUALIZE_DEFAULT 1
-#define VISUALIZE VISUALIZE_BORDERS
-#define PRINT_GB false
 
 // These have to be able to print as one character wide otherwise it will break
 // the print
@@ -549,6 +512,7 @@ void Chunk::readInBorder() {
 }
 
 void Chunk::processNextState() {
+  /*
   if (m_flags & Flags::EMPTY) {
     // Logic for if the border will spawn any cells or not
     RowType top = m_data[k_topBorder];
@@ -589,6 +553,7 @@ void Chunk::processNextState() {
       return;
     }
   }
+  */
 
   uint64_t top = m_data[k_topBorder];
 

@@ -3,9 +3,13 @@
 #include <cstdint>
 #include <functional>
 #include <iostream>
-#include <limits>
 #include <memory>
 #include <unordered_map>
+
+#define VISUALIZE_BORDERS 0
+#define VISUALIZE_DEFAULT 1
+#define VISUALIZE VISUALIZE_DEFAULT
+#define PRINT_GB true
 
 struct ChunkKey {
   ChunkKey(int32_t x, int32_t y) : x(x), y(y) {}
@@ -48,7 +52,6 @@ public:
   void update();
 
   friend std::ostream &operator<<(std::ostream &o, GameBoard &g);
-
 private:
   friend class Chunk;
 
@@ -71,7 +74,7 @@ private:
 
 class Chunk {
 public:
-  using RowType = uint32_t;
+  using RowType = uint16_t;
 
   enum Flags : uint32_t {
     CLEAR = 0,

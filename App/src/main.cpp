@@ -3,9 +3,9 @@
 #include "LibFunni/log.h"
 #include "Utils/Console.h"
 #include "Utils/WrappedPoint.h"
+#include <bitset>
 #include <chrono>
 #include <iostream>
-#include <bitset>
 
 void simpleBitArrayTest();
 void simpleChunkTest();
@@ -102,17 +102,18 @@ void simpleGameBoardTest() {
 
     lastTimeMuS =
         std::chrono::duration_cast<std::chrono::nanoseconds>(end - start)
-            .count() / 1000.0f;
+            .count() /
+        1000.0f;
     runs++;
     averageTimeMuS = ((runs - 1) * averageTimeMuS + lastTimeMuS) / runs;
 
-    if (runs % 10000 == 0) {
-      std::cout << gb << std::flush;
-      std::cout << "Run " << runs << " | Time: " << lastTimeMuS
-                << " micro sec | Avg time: " << (averageTimeMuS) << " micro sec"
-                << std::endl;
-      std::cin.get(input);
-    }
+    // if (runs % 10000 == 0) {
+    std::cout << gb << std::flush;
+    std::cout << "Run " << runs << " | Time: " << lastTimeMuS
+              << " micro sec | Avg time: " << (averageTimeMuS) << " micro sec"
+              << std::endl;
+    std::cin.get(input);
+    // }
   }
 }
 
