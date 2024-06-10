@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <array>
 #include <cstdint>
 #include <functional>
@@ -6,10 +6,26 @@
 #include <memory>
 #include <unordered_map>
 
+#include "Chunk.h"
+
 #define VISUALIZE_BORDERS 0
 #define VISUALIZE_DEFAULT 1
 #define VISUALIZE VISUALIZE_DEFAULT
 #define PRINT_GB true
+
+// These have to be able to print as one character wide otherwise it will break
+// the print
+#ifdef _WIN32
+
+#define ALIVE_CELL "#"
+#define DEAD_CELL "-"
+
+#else
+
+#define ALIVE_CELL "▓"
+#define DEAD_CELL "0"
+
+#endif
 
 struct ChunkKey {
   ChunkKey(int32_t x, int32_t y) : x(x), y(y) {}
@@ -35,11 +51,6 @@ public:
     return (53 + h1) * 53 + h2;
   }
 };
-
-/**
- * 64 x 64 block of bits for gameboard.
- */
-class Chunk;
 
 /**
  * Main gameboard structure for working with chunks and controlling the system.
@@ -71,97 +82,3 @@ private:
   std::shared_ptr<Chunk> getOrMakeChunk(ChunkKey key);
   void makeBorderChunks(ChunkKey key, std::shared_ptr<Chunk> c);
 };
-
-class Chunk {
-public:
-  using RowType = uint16_t;
-
-  enum Flags : uint32_t {
-    CLEAR = 0,
-    // Flag specifying that the chunk is currently empty better to just check
-    // this than constantly caluclate it
-    EMPTY = 1,
-    // Flag specifying that one or more of the surrounding border chunks does
-    // not exist
-    MISSING_BORDER_CHUNK = 1 << 1,
-    // Flag specifying if all surrounding border chunks are empty
-    ALL_BORDERS_EMPTY = 1 << 2,
-  };
-
-  // I think this should size should be 6 bits under the type used in m_data for
-  // each row.
-  static constexpr int32_t k_size = 8;
-  static constexpr int32_t k_topBorder = k_size + 1;
-  static constexpr int32_t k_bottomBorder = 0;
-  static constexpr RowType k_leftBorderBit = 1ul << (k_size + 1);
-  static constexpr RowType k_rightBorderBit = 1ul;
-  static constexpr RowType k_dataBits = ((1ul << k_size) - 1) << 1;
-
-  std::shared_ptr<Chunk> upLeft;
-  std::shared_ptr<Chunk> up;
-  std::shared_ptr<Chunk> upRight;
-  std::shared_ptr<Chunk> left;
-  std::shared_ptr<Chunk> right;
-  std::shared_ptr<Chunk> downLeft;
-  std::shared_ptr<Chunk> down;
-  std::shared_ptr<Chunk> downRight;
-
-  // I am not sure if this should return the chunks Flags, maybe there should
-  // just be a function called getFlags() or maybe both?
-  void processNextState();
-  void readInBorder();
-  Flags getFlags() { return m_flags; }
-
-  bool getCell(int32_t x, int32_t y);
-  void setCell(int32_t x, int32_t y, bool val);
-
-  using iterator = typename std::array<RowType, k_size + 2>::iterator;
-  using reverse_iterator =
-      typename std::array<RowType, k_size + 2>::reverse_iterator;
-  using const_iterator =
-      typename std::array<RowType, k_size + 2>::const_iterator;
-  using const_reverse_iterator =
-      typename std::array<RowType, k_size + 2>::const_reverse_iterator;
-
-  iterator begin() { return m_data.begin(); };
-  const_iterator begin() const { return m_data.begin(); };
-
-  reverse_iterator rbegin() { return m_data.rbegin(); };
-  const_reverse_iterator rbegin() const { return m_data.rbegin(); };
-
-  iterator end() { return m_data.end(); };
-  const_iterator end() const { return m_data.end(); };
-
-  reverse_iterator rend() { return m_data.rend(); };
-  const_reverse_iterator rend() const { return m_data.rend(); };
-
-  friend std::ostream &operator<<(std::ostream &o, Chunk &c);
-
-private:
-  Flags m_flags = Flags::EMPTY;
-  std::array<RowType, k_size + 2> m_data{};
-
-  void processEmpty();
-};
-
-inline Chunk::Flags operator~(Chunk::Flags a) {
-  return (Chunk::Flags) ~(uint32_t)a;
-}
-inline Chunk::Flags operator|(Chunk::Flags a, Chunk::Flags b) {
-  return (Chunk::Flags)((uint32_t)a | (uint32_t)b);
-}
-inline Chunk::Flags operator&(Chunk::Flags a, Chunk::Flags b) {
-  return (Chunk::Flags)((uint32_t)a & (uint32_t)b);
-}
-inline Chunk::Flags operator^(Chunk::Flags a, Chunk::Flags b) {
-  return (Chunk::Flags)((uint32_t)a ^ (uint32_t)b);
-}
-inline Chunk::Flags &operator|=(Chunk::Flags &a, Chunk::Flags b) {
-  return (Chunk::Flags &)((uint32_t &)a |= (uint32_t)b);
-}
-inline Chunk::Flags &operator&=(Chunk::Flags &a, Chunk::Flags b) {
-  return (Chunk::Flags &)((uint32_t &)a &= (uint32_t)b);
-}
-inline Chunk::Flags &operator^=(Chunk::Flags &a, Chunk::Flags b) {
-  return (Chunk::Flags &)((uint32_t &)a ^= (uint32_t)b);
-}
