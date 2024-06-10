@@ -1,61 +1,49 @@
 ﻿#include "Chunk.h"
 
 constexpr std::array<bool, 512> createBitsToStateMap() {
-    std::array<bool, 512> map;
-    for (int16_t i = 0; i <= 0b111111111; i++) {
-        uint8_t neighbor_count = 0;
-        int16_t neighbors = i & 0b111101111;
-        bool alive = i & 0b000010000;
-        while (neighbors > 0) {
-            if (neighbors & 0b1) {
-                neighbor_count++;
-            }
+  std::array<bool, 512> map;
+  for (int16_t i = 0; i <= 0b111111111; i++) {
+    uint8_t neighbor_count = 0;
+    int16_t neighbors = i & 0b111101111;
+    bool alive = i & 0b000010000;
+    while (neighbors > 0) {
+      if (neighbors & 0b1) {
+        neighbor_count++;
+      }
 
-            neighbors >>= 1;
-        }
-
-        map[i] = neighbor_count == 3 || (neighbor_count == 2 && alive);
+      neighbors >>= 1;
     }
-    return map;
+
+    map[i] = neighbor_count == 3 || (neighbor_count == 2 && alive);
+  }
+  return map;
 }
 
 static const std::array<bool, 512> bitsToState = createBitsToStateMap();
 
-constexpr std::array<bool, 256> createThreeConsecBitInByteMap() {
-    std::array<bool, 256> map{};
-
-    for (int val = 0b111; val <= 0xFF; val = (val << 1) | 1) {
-        for (int i = val; i <= 0xFF; i <<= 1) {
-            map[i] = true;
-        }
-    }
-
-    return map;
-}
-
 // I apoligize for this name bit it stands for three consecutive bits in a byte
 // map Which takes in a byte and tells you if there are 3 consecutive bits in
 // that byte pretty self explanatory ¯\_(ツ)_/¯
-static const std::array<bool, 256> tcbibm = createThreeConsecBitInByteMap();
+const std::array<bool, 256> tcbibm = getThreeConsecutiveBitCheckTable<unsigned char>();
 
 constexpr std::array<bool, 32> createCornerMap() {
-    std::array<bool, 32> map{};
+  std::array<bool, 32> map{};
 
-    for (int16_t i = 0; i <= 0b11111; i++) {
-        int16_t current = i;
-        int8_t count = 0;
-        while (current > 0) {
-            if (current & 0b1) {
-                count++;
-            }
+  for (int16_t i = 0; i <= 0b11111; i++) {
+    int16_t current = i;
+    int8_t count = 0;
+    while (current > 0) {
+      if (current & 0b1) {
+        count++;
+      }
 
-            current >>= 1;
-        }
-
-        map[i] = count >= 3;
+      current >>= 1;
     }
 
-    return map;
+    map[i] = count >= 3;
+  }
+
+  return map;
 }
 
 // Map of byte to the number of bits in it

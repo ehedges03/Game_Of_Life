@@ -2,6 +2,7 @@
 #include <array>
 #include <cstdint>
 #include <iostream>
+#include <limits>
 
 class Chunk {
 public:
@@ -95,4 +96,34 @@ inline Chunk::Flags& operator&=(Chunk::Flags& a, Chunk::Flags b) {
 }
 inline Chunk::Flags& operator^=(Chunk::Flags& a, Chunk::Flags b) {
     return (Chunk::Flags&)((uint32_t&)a ^= (uint32_t)b);
+}
+
+/**
+* This function creates a table (array) with indices spanning all possible values for a 
+* given unsigned integer type. Each value in the array is a bool representing whether the integer
+* has three consecutive bits somewhere within it (true) or not (false).
+* 
+* I have a feeling it could be faster, but it's constexpr so definitely not a priority
+*/
+template <typename UintThingy, int numVals = (sizeof(UintThingy) * 256)>
+constexpr std::array<bool, numVals> getThreeConsecutiveBitCheckTable() {
+  static_assert(std::numeric_limits<UintThingy>::is_signed == false);
+  std::array<bool, numVals> table{};
+
+  for (UintThingy candidate = std::numeric_limits<UintThingy>::max() ; candidate >= 0b111 ; candidate--) {
+    UintThingy testee = candidate;
+
+    // I figured I could subtract 3 and not 2 here, but that seems to be an off by 1 bc/ the output was wrong
+    // for consecutive bits in the most significant nibble (i.e. 0b11100000 was false)
+    // I might be sleepy...
+    for (int i = sizeof(UintThingy) * 8 - 2 ; i >= 0 ; i--) {
+      if (!(testee & 0b0111 ^ 0b0111)) {
+        table[candidate] = true;
+        break;
+      }
+      testee >>= 1;
+    }
+  }
+
+  return table;
 }
