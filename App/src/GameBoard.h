@@ -1,10 +1,12 @@
 ﻿#pragma once
 #include <array>
+#include <condition_variable>
 #include <cstdint>
 #include <functional>
 #include <iostream>
 #include <memory>
 #include <unordered_map>
+#include <thread>
 
 #include "Chunk.h"
 
@@ -12,6 +14,7 @@
 #define VISUALIZE_DEFAULT 1
 #define VISUALIZE VISUALIZE_DEFAULT
 #define PRINT_GB true
+#define NUM_WORKERS 4
 
 // These have to be able to print as one character wide otherwise it will break
 // the print
@@ -60,13 +63,32 @@ public:
   void setPoint(int32_t x, int32_t y, bool value);
   bool getPoint(int32_t x, int32_t y);
 
+  bool startThreads();
+  bool stopThreads();
+
   void update();
 
   friend std::ostream &operator<<(std::ostream &o, GameBoard &g);
+
 private:
   friend class Chunk;
 
   std::unordered_map<ChunkKey, std::shared_ptr<Chunk>, ChunkKeyHash> m_chunks;
+
+  std::array<std::thread, NUM_WORKERS> m_threads;
+  bool m_threadsStarted = false;
+  std::condition_variable m_signalThreadsCv;
+  std::mutex m_cvMutex;
+
+  enum class Tsig {
+    Idle,
+    Update,
+    Terminate
+  };
+
+  Tsig m_tSig; // ensure this is appropriately protected by m_cvMutex (make atomic?)
+
+  void processChunks(int order);
 
   /**
    * Take a general (x,y) coordinate and find the chunk that it cooresponds
@@ -74,6 +96,7 @@ private:
    */
   ChunkKey calcChunkKey(int32_t x, int32_t y);
   void makeChunk(ChunkKey key);
+
   /**
    * Delets a given chunk's border connections
    */

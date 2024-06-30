@@ -43,6 +43,65 @@ bool GameBoard::getPoint(int32_t x, int32_t y) {
   return false;
 }
 
+bool GameBoard::startThreads() {
+
+  if (m_threadsStarted) {
+    std::cout << "WARN: attempted to start started threads" << '\n';
+    return false;
+  }
+
+  for (int i = 0; i < NUM_WORKERS; i++) {
+    m_threads[i] = std::thread(std::bind(&GameBoard::processChunks, this, std::placeholders::_1), i);
+  }
+
+  m_threadsStarted = true;
+  return true;
+}
+
+bool GameBoard::stopThreads() {
+  if (!m_threadsStarted) {
+    std::cout << "WARN: attempted to stop stopped threads" << '\n';
+    return false;
+  }
+
+  // signal each thread to stop !!!HAZARD: if this signal is sent while processing chunks, then it might be missed -- address this somehow
+  // I think I want some kind of check-in (semaphore?) from each thread that confirms it has completed its work after getting signaled
+  // threads should have a timeout on the wait (wait_for) and a predicate that only does chunk work if not terminated && updating (updating/idle statuses are key to differentiate timeouts from signals)
+  {
+    std::lock_guard lock(m_cvMutex);
+    m_tSig = Tsig::Terminate;
+  }
+  m_signalThreadsCv.notify_all();
+
+  // join each thread
+  for (auto& worker : m_threads) {
+    worker.join();
+  }
+
+  m_threadsStarted = false;
+  return true;
+}
+
+void GameBoard::processChunks(int order) {
+
+  while (1) {
+    std::unique_lock lock(m_cvMutex);
+    m_signalThreadsCv.wait(lock);
+
+    if (m_tSig == Tsig::Terminate) {
+      break;
+    }
+    if (m_tSig == Tsig::Idle) {
+      continue;
+    }
+    lock.unlock();
+
+    // TODO: update the appropriate chunks
+    
+  }
+
+}
+
 void GameBoard::update() {
 
   // Check chunks for deletion
@@ -81,33 +140,34 @@ void GameBoard::update() {
   }
 }
 
+// TODO: move this into Chunk
 void GameBoard::deleteChunkBorders(std::shared_ptr<Chunk> c) {
   if (!c)
     return;
 
-  if (c->upLeft)
-    c->upLeft->downRight = nullptr;
+  if (c->m_upLeft)
+    c->m_upLeft->m_downRight = nullptr;
 
-  if (c->up)
-    c->up->down = nullptr;
+  if (c->m_up)
+    c->m_up->m_down = nullptr;
 
-  if (c->upRight)
-    c->upRight->downLeft = nullptr;
+  if (c->m_upRight)
+    c->m_upRight->m_downLeft = nullptr;
 
-  if (c->left)
-    c->left->right = nullptr;
+  if (c->m_left)
+    c->m_left->m_right = nullptr;
 
-  if (c->right)
-    c->right->left = nullptr;
+  if (c->m_right)
+    c->m_right->m_left = nullptr;
 
-  if (c->downLeft)
-    c->downLeft->upRight = nullptr;
+  if (c->m_downLeft)
+    c->m_downLeft->m_upRight = nullptr;
 
-  if (c->down)
-    c->down->up = nullptr;
+  if (c->m_down)
+    c->m_down->m_up = nullptr;
 
-  if (c->downRight)
-    c->downRight->upLeft = nullptr;
+  if (c->m_downRight)
+    c->m_downRight->m_upLeft = nullptr;
 }
 
 ChunkKey GameBoard::calcChunkKey(int32_t x, int32_t y) {
@@ -148,71 +208,71 @@ void GameBoard::makeChunk(ChunkKey key) {
   m_chunks[key] = chunk;
 
   // Get all border chunks into the references
-  chunk->upLeft = getChunk({key.x - 1, key.y + 1});
-  chunk->up = getChunk({key.x, key.y + 1});
-  chunk->upRight = getChunk({key.x + 1, key.y + 1});
-  chunk->left = getChunk({key.x - 1, key.y});
-  chunk->right = getChunk({key.x + 1, key.y});
-  chunk->downLeft = getChunk({key.x - 1, key.y - 1});
-  chunk->down = getChunk({key.x, key.y - 1});
-  chunk->downRight = getChunk({key.x + 1, key.y - 1});
+  chunk->m_upLeft = getChunk({key.x - 1, key.y + 1});
+  chunk->m_up = getChunk({key.x, key.y + 1});
+  chunk->m_upRight = getChunk({key.x + 1, key.y + 1});
+  chunk->m_left = getChunk({key.x - 1, key.y});
+  chunk->m_right = getChunk({key.x + 1, key.y});
+  chunk->m_downLeft = getChunk({key.x - 1, key.y - 1});
+  chunk->m_down = getChunk({key.x, key.y - 1});
+  chunk->m_downRight = getChunk({key.x + 1, key.y - 1});
 
   // For each border chunk reference this chunk in it
-  if (chunk->upLeft)
-    chunk->upLeft->downRight = chunk;
+  if (chunk->m_upLeft)
+    chunk->m_upLeft->m_downRight = chunk;
 
-  if (chunk->up)
-    chunk->up->down = chunk;
+  if (chunk->m_up)
+    chunk->m_up->m_down = chunk;
 
-  if (chunk->upRight)
-    chunk->upRight->downLeft = chunk;
+  if (chunk->m_upRight)
+    chunk->m_upRight->m_downLeft = chunk;
 
-  if (chunk->left)
-    chunk->left->right = chunk;
+  if (chunk->m_left)
+    chunk->m_left->m_right = chunk;
 
-  if (chunk->right)
-    chunk->right->left = chunk;
+  if (chunk->m_right)
+    chunk->m_right->m_left = chunk;
 
-  if (chunk->downLeft)
-    chunk->downLeft->upRight = chunk;
+  if (chunk->m_downLeft)
+    chunk->m_downLeft->m_upRight = chunk;
 
-  if (chunk->down)
-    chunk->down->up = chunk;
+  if (chunk->m_down)
+    chunk->m_down->m_up = chunk;
 
-  if (chunk->downRight)
-    chunk->downRight->upLeft = chunk;
+  if (chunk->m_downRight)
+    chunk->m_downRight->m_upLeft = chunk;
 }
 
 void GameBoard::makeBorderChunks(ChunkKey key, std::shared_ptr<Chunk> c) {
-  if (!c->upLeft) {
+  if (!c->m_upLeft) {
     makeChunk({key.x - 1, key.y + 1});
   }
 
-  if (!c->up) {
+  if (!c->m_up) {
     makeChunk({key.x, key.y + 1});
   }
 
-  if (!c->upRight) {
+  if (!c->m_upRight) {
     makeChunk({key.x + 1, key.y + 1});
   }
 
-  if (!c->left) {
+  if (!c->m_left) {
     makeChunk({key.x - 1, key.y});
   }
 
-  if (!c->right) {
+  if (!c->m_right) {
     makeChunk({key.x + 1, key.y});
   }
 
-  if (!c->downLeft) {
+  if (!c->m_downLeft) {
     makeChunk({key.x - 1, key.y - 1});
   }
 
-  if (!c->down) {
+  if (!c->m_down) {
     makeChunk({key.x, key.y - 1});
   }
 
-  if (!c->downRight) {
+  if (!c->m_downRight) {
     makeChunk({key.x + 1, key.y - 1});
   }
 }

@@ -30,14 +30,14 @@ public:
     static constexpr RowType k_rightBorderBit = 1ul;
     static constexpr RowType k_dataBits = ((1ul << k_size) - 1) << 1;
 
-    std::shared_ptr<Chunk> upLeft;
-    std::shared_ptr<Chunk> up;
-    std::shared_ptr<Chunk> upRight;
-    std::shared_ptr<Chunk> left;
-    std::shared_ptr<Chunk> right;
-    std::shared_ptr<Chunk> downLeft;
-    std::shared_ptr<Chunk> down;
-    std::shared_ptr<Chunk> downRight;
+    std::shared_ptr<Chunk> m_upLeft;
+    std::shared_ptr<Chunk> m_up;
+    std::shared_ptr<Chunk> m_upRight;
+    std::shared_ptr<Chunk> m_left;
+    std::shared_ptr<Chunk> m_right;
+    std::shared_ptr<Chunk> m_downLeft;
+    std::shared_ptr<Chunk> m_down;
+    std::shared_ptr<Chunk> m_downRight;
 
     // I am not sure if this should return the chunks Flags, maybe there should
     // just be a function called getFlags() or maybe both?

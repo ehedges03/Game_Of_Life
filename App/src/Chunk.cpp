@@ -82,57 +82,57 @@ void Chunk::readInBorder() {
     // this will be false
     int32_t allBordersEmpty = Flags::EMPTY;
 
-    if (up) {
-        m_data[k_topBorder] |= up->m_data[1] & k_dataBits;
-        allBordersEmpty &= up->m_flags;
+    if (m_up) {
+        m_data[k_topBorder] |= m_up->m_data[1] & k_dataBits;
+        allBordersEmpty &= m_up->m_flags;
         borderingChunks++;
     }
 
-    if (upLeft) {
-        m_data[k_topBorder] |= (upLeft->m_data[1] << k_size) & k_leftBorderBit;
-        allBordersEmpty &= upLeft->m_flags;
+    if (m_upLeft) {
+        m_data[k_topBorder] |= (m_upLeft->m_data[1] << k_size) & k_leftBorderBit;
+        allBordersEmpty &= m_upLeft->m_flags;
         borderingChunks++;
     }
 
-    if (upRight) {
-        m_data[k_topBorder] |= (upRight->m_data[1] >> k_size) & k_rightBorderBit;
-        allBordersEmpty &= upRight->m_flags;
+    if (m_upRight) {
+        m_data[k_topBorder] |= (m_upRight->m_data[1] >> k_size) & k_rightBorderBit;
+        allBordersEmpty &= m_upRight->m_flags;
         borderingChunks++;
     }
 
-    if (down) {
-        m_data[k_bottomBorder] |= down->m_data[k_size] & k_dataBits;
-        allBordersEmpty &= down->m_flags;
+    if (m_down) {
+        m_data[k_bottomBorder] |= m_down->m_data[k_size] & k_dataBits;
+        allBordersEmpty &= m_down->m_flags;
         borderingChunks++;
     }
 
-    if (downLeft) {
+    if (m_downLeft) {
         m_data[k_bottomBorder] |=
-            (downLeft->m_data[k_size] << k_size) & k_leftBorderBit;
-        allBordersEmpty &= downLeft->m_flags;
+            (m_downLeft->m_data[k_size] << k_size) & k_leftBorderBit;
+        allBordersEmpty &= m_downLeft->m_flags;
         borderingChunks++;
     }
 
-    if (downRight) {
+    if (m_downRight) {
         m_data[k_bottomBorder] |=
-            (downRight->m_data[k_size] >> k_size) & k_rightBorderBit;
-        allBordersEmpty &= downRight->m_flags;
+            (m_downRight->m_data[k_size] >> k_size) & k_rightBorderBit;
+        allBordersEmpty &= m_downRight->m_flags;
         borderingChunks++;
     }
 
-    if (left) {
+    if (m_left) {
         for (int i = 1; i <= k_size; i++) {
-            m_data[i] |= (left->m_data[i] << k_size) & k_leftBorderBit;
+            m_data[i] |= (m_left->m_data[i] << k_size) & k_leftBorderBit;
         }
-        allBordersEmpty &= left->m_flags;
+        allBordersEmpty &= m_left->m_flags;
         borderingChunks++;
     }
 
-    if (right) {
+    if (m_right) {
         for (int i = 1; i <= k_size; i++) {
-            m_data[i] |= (right->m_data[i] >> k_size) & k_rightBorderBit;
+            m_data[i] |= (m_right->m_data[i] >> k_size) & k_rightBorderBit;
         }
-        allBordersEmpty &= right->m_flags;
+        allBordersEmpty &= m_right->m_flags;
         borderingChunks++;
     }
 
