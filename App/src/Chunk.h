@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <iostream>
 #include <limits>
+#include <cmath>
 
 class Chunk {
 public:
@@ -105,7 +106,7 @@ inline Chunk::Flags& operator^=(Chunk::Flags& a, Chunk::Flags b) {
 * 
 * I have a feeling it could be faster, but it's constexpr so definitely not a priority
 */
-template <typename UintThingy, int numVals = (sizeof(UintThingy) * 256)>
+template <typename UintThingy, long long numVals = (1 << (sizeof(UintThingy) * 8))>
 constexpr std::array<bool, numVals> getThreeConsecutiveBitCheckTable() {
   static_assert(std::numeric_limits<UintThingy>::is_signed == false);
   std::array<bool, numVals> table{};
