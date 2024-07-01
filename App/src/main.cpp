@@ -1,10 +1,14 @@
 #include "BitArray.h"
 #include "GameBoard.h"
 #include "LibFunni/log.h"
+#include "Utils/Console.h"
 #include "Utils/WrappedPoint.h"
+#include <bitset>
+#include <chrono>
 #include <iostream>
 
 void simpleBitArrayTest();
+void simpleChunkTest();
 void simpleGameBoardTest();
 void simpleWrappedPointTest();
 void simpleLoggerTest();
@@ -12,8 +16,9 @@ void simpleLoggerTest();
 int main() {
   simpleBitArrayTest();
   simpleWrappedPointTest();
+  // simpleChunkTest();
   simpleGameBoardTest();
-  // simpleLoggerTest();
+  simpleLoggerTest();
 }
 
 void simpleBitArrayTest() {
@@ -36,17 +41,80 @@ void simpleBitArrayTest() {
   std::cout << mybits << '\n';
 }
 
-void simpleGameBoardTest() {
-  GameBoard test;
+// clang-format off
+constexpr std::array<std::bitset<8>, 8> chunkStart = {
+    0b00000000, 
+    0b00000000, 
+    0b00000010,
+    0b00001011, 
+    0b00001010, 
+    0b00001000,
+    0b00100000, 
+    0b10100000, 
+};
+// clang-format on
 
-  std::cout << test << std::endl;
-  for (int x = -64; x < 64; x++) {
-    for (int y = -16; y < 16; y++) {
-      test.setPoint(x, y, x < 0 || y < 0 || (x + y) % 2);
+void simpleChunkTest() {
+  Chunk c;
+  char input;
+
+  for (int y = 0; y < 8; y++) {
+    for (int x = 0; x < 8; x++) {
+      c.setCell(x, y, chunkStart[7 - y][7 - x]);
     }
   }
-  std::cout << test << std::endl;
-  std::cin.get();
+
+  Console::Screen::clear();
+  Console::Cursor::setPosition(0, 0);
+  std::cout << c << std::endl;
+  std::cin.get(input);
+
+  while (input != 'q') {
+    c.processNextState();
+
+    Console::Screen::clear();
+    Console::Cursor::setPosition(0, 0);
+    std::cout << c << std::endl;
+    std::cin.get(input);
+  }
+}
+
+void simpleGameBoardTest() {
+  GameBoard gb;
+  char input;
+
+  for (int y = 0; y < 8; y++) {
+    for (int x = 0; x < 8; x++) {
+      gb.setPoint(x, y, chunkStart[7 - y][7 - x]);
+    }
+  }
+
+  std::cout << gb << std::endl;
+  std::cin.get(input);
+
+  double lastTimeMuS = 0, averageTimeMuS = 0;
+  uint32_t runs = 0;
+
+  while (input != 'q') {
+    auto start = std::chrono::steady_clock::now();
+    gb.update();
+    auto end = std::chrono::steady_clock::now();
+
+    lastTimeMuS =
+        std::chrono::duration_cast<std::chrono::nanoseconds>(end - start)
+            .count() /
+        1000.0f;
+    runs++;
+    averageTimeMuS = ((runs - 1) * averageTimeMuS + lastTimeMuS) / runs;
+
+    // if (runs % 10000 == 0) {
+    std::cout << gb << std::flush;
+    std::cout << "Run " << runs << " | Time: " << lastTimeMuS
+              << " micro sec | Avg time: " << (averageTimeMuS) << " micro sec"
+              << std::endl;
+    std::cin.get(input);
+    // }
+  }
 }
 
 void simpleWrappedPointTest() {
