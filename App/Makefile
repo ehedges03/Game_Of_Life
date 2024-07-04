@@ -83,9 +83,11 @@ GENERATED :=
 OBJECTS :=
 
 GENERATED += $(OBJDIR)/BitArray.o
+GENERATED += $(OBJDIR)/Chunk.o
 GENERATED += $(OBJDIR)/GameBoard.o
 GENERATED += $(OBJDIR)/main.o
 OBJECTS += $(OBJDIR)/BitArray.o
+OBJECTS += $(OBJDIR)/Chunk.o
 OBJECTS += $(OBJDIR)/GameBoard.o
 OBJECTS += $(OBJDIR)/main.o
 
@@ -152,6 +154,9 @@ endif
 # #############################################
 
 $(OBJDIR)/BitArray.o: src/BitArray.cpp
+	@echo "$(notdir $<)"
+	$(SILENT) $(CXX) $(ALL_CXXFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
+$(OBJDIR)/Chunk.o: src/Chunk.cpp
 	@echo "$(notdir $<)"
 	$(SILENT) $(CXX) $(ALL_CXXFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 $(OBJDIR)/GameBoard.o: src/GameBoard.cpp

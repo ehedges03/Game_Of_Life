@@ -6,8 +6,6 @@
 #include <memory>
 #include <unordered_map>
 
-#include "Chunk.h"
-
 #define VISUALIZE_BORDERS 0
 #define VISUALIZE_DEFAULT 1
 #define VISUALIZE VISUALIZE_DEFAULT
@@ -51,6 +49,8 @@ public:
     return (53 + h1) * 53 + h2;
   }
 };
+
+class Chunk;
 
 /**
  * Main gameboard structure for working with chunks and controlling the system.

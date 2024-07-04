@@ -1,11 +1,13 @@
+#include <bitset>
+#include <chrono>
+#include <iostream>
+
 #include "BitArray.h"
+#include "Chunk.h"
 #include "GameBoard.h"
 #include "LibFunni/log.h"
 #include "Utils/Console.h"
 #include "Utils/WrappedPoint.h"
-#include <bitset>
-#include <chrono>
-#include <iostream>
 
 void simpleBitArrayTest();
 void simpleChunkTest();
