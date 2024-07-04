@@ -1,9 +1,11 @@
-#include "GameBoard.h"
-#include "Utils/Console.h"
 #include <bitset>
 #include <iostream>
-#include <utility>
 #include <limits>
+#include <utility>
+
+#include "Chunk.h"
+#include "GameBoard.h"
+#include "Utils/Console.h"
 
 /*
 GameBoard method definitions
