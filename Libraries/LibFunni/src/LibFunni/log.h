@@ -27,52 +27,28 @@ public:
     return true;
   }
 
-  void logd() { ilogd<enD>(); }
+  void logd() { 
+    if (!enD) return;
+    std::cout << "testing logging d" << '\n';
+  }
 
-  void logi() { ilogi<enI>(); }
+  void logi() { 
+    if (!enI) return;
+    std::cout << "testing logging i" << '\n';
+  }
 
-  void logw() { ilogw<enW>(); }
+  void logw() { 
+    if (!enW) return;
+    std::cout << "testing logging w" << '\n'; 
+  }
 
-  void loge() { iloge<enE>(); }
+  void loge() { 
+    if (!enE) return;
+    std::cout << "testing logging e" << '\n';
+  }
 
 private:
   std::string m_tag;
-
-  // debug
-  template <bool en> void ilogd();
-
-  template <> void ilogd<true>() { std::cout << "testing logging d" << '\n'; }
-
-  template <> void ilogd<false>() {
-    // no-op
-  }
-
-  // info
-  template <bool en> void ilogi();
-
-  template <> void ilogi<true>() { std::cout << "testing logging i" << '\n'; }
-
-  template <> void ilogi<false>() {
-    // no-op
-  }
-
-  // warning
-  template <bool en> void ilogw();
-
-  template <> void ilogw<true>() { std::cout << "testing logging w" << '\n'; }
-
-  template <> void ilogw<false>() {
-    // no-op
-  }
-
-  // error
-  template <bool en> void iloge();
-
-  template <> void iloge<true>() { std::cout << "testing logging e" << '\n'; }
-
-  template <> void iloge<false>() {
-    // no-op
-  }
 };
 
 } // namespace funni

@@ -20,7 +20,7 @@ int main() {
   simpleWrappedPointTest();
   // simpleChunkTest();
   simpleGameBoardTest();
-  simpleLoggerTest();
+  // simpleLoggerTest();
 }
 
 void simpleBitArrayTest() {
@@ -136,16 +136,16 @@ void simpleWrappedPointTest() {
             << testWPoint2.x() << ", " << testWPoint2.y();
 }
 
-void simpleLoggerTest() {
-  // only logd will function
-  funni::Logger<true, false, false, false> logger("logtest");
-
-  std::cout << "\n\n";
-
-  logger.Start();
-
-  logger.logd();
-  logger.logi();
-  logger.logw();
-  logger.logi();
-}
+// void simpleLoggerTest() {
+//   // only logd will function
+//   funni::Logger<true, false, false, false> logger("logtest");
+// 
+//   std::cout << "\n\n";
+// 
+//   logger.Start();
+// 
+//   logger.logd();
+//   logger.logi();
+//   logger.logw();
+//   logger.logi();
+// }

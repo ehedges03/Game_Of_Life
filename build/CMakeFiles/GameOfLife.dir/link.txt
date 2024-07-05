@@ -1,0 +1,1 @@
+/usr/bin/c++ CMakeFiles/GameOfLife.dir/src/BitArray.cpp.o CMakeFiles/GameOfLife.dir/src/Chunk.cpp.o CMakeFiles/GameOfLife.dir/src/GameBoard.cpp.o CMakeFiles/GameOfLife.dir/src/main.cpp.o -o GameOfLife  Libraries/LibFunni/libLibFunni.a

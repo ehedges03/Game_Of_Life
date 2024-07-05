@@ -1,0 +1,2 @@
+/usr/bin/ar qc libFunniLib.a CMakeFiles/FunniLib.dir/src/libFunni.cpp.o CMakeFiles/FunniLib.dir/src/pch.cpp.o
+/usr/bin/ranlib libFunniLib.a
