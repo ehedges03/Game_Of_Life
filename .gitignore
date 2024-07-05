@@ -400,3 +400,8 @@ FodyWeavers.xsd
 compile_commands.json
 .vscode
 **/Makefile
+build
+CMakeFiles
+CMakeCache.txt
+GameOfLife
+**/cmake_install.cmake

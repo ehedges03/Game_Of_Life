@@ -1,8 +1,0 @@
-/home/ehedges/Personal/Game_Of_Life/build/CMakeFiles/GameOfLife.dir
-/home/ehedges/Personal/Game_Of_Life/build/CMakeFiles/edit_cache.dir
-/home/ehedges/Personal/Game_Of_Life/build/CMakeFiles/rebuild_cache.dir
-/home/ehedges/Personal/Game_Of_Life/build/Libraries/CMakeFiles/edit_cache.dir
-/home/ehedges/Personal/Game_Of_Life/build/Libraries/CMakeFiles/rebuild_cache.dir
-/home/ehedges/Personal/Game_Of_Life/build/Libraries/LibFunni/CMakeFiles/LibFunni.dir
-/home/ehedges/Personal/Game_Of_Life/build/Libraries/LibFunni/CMakeFiles/edit_cache.dir
-/home/ehedges/Personal/Game_Of_Life/build/Libraries/LibFunni/CMakeFiles/rebuild_cache.dir

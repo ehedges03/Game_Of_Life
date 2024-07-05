@@ -1,2 +1,0 @@
-/usr/bin/ar qc libLibFunni.a CMakeFiles/LibFunni.dir/src/LibFunni/libFunni.cpp.o CMakeFiles/LibFunni.dir/src/LibFunni/pch.cpp.o
-/usr/bin/ranlib libLibFunni.a

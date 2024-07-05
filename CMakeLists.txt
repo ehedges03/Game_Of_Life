@@ -18,13 +18,6 @@ add_executable(${PROJECT_NAME} ${src_files})
 # Link with FunniLib
 target_link_libraries(${PROJECT_NAME} LibFunni)
  
-# Include LibFunni directory for include files
-# target_include_directories(${PROJECT_NAME}
-# PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Libraries/LibFunni/include
-# )
-
-
-
 
 
 
