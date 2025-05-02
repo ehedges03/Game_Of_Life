@@ -7,17 +7,18 @@ project(GameOfLife LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-include(FetchContent)
+# Export compile commands for nvim lsp
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 file(GLOB_RECURSE src_files ${CMAKE_CURRENT_SOURCE_DIR}/src/*.[ch]pp ${CMAKE_CURRENT_SOURCE_DIR}/src/*.[ch])
 
 add_subdirectory(Libraries)
+find_package(glfw3 CONFIG REQUIRED)
 
 add_executable(${PROJECT_NAME} ${src_files})
 
 # Link with FunniLib
-target_link_libraries(${PROJECT_NAME} LibFunni)
- 
+target_link_libraries(${PROJECT_NAME} PRIVATE LibFunni PRIVATE glfw)
 
 
 

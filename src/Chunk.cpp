@@ -80,7 +80,7 @@ void Chunk::readInBorder() {
     int32_t borderingChunks = 0;
     // This will be anded with all chunks flags and if any of them are not empty
     // this will be false
-    int32_t allBordersEmpty = Flags::EMPTY;
+    Flags allBordersEmpty = Flags::EMPTY;
 
     if (up) {
         m_data[k_topBorder] |= up->m_data[1] & k_dataBits;
@@ -136,17 +136,15 @@ void Chunk::readInBorder() {
         borderingChunks++;
     }
 
-    if (allBordersEmpty) {
+    if (static_cast<uint32_t>(allBordersEmpty)) {
         m_flags |= Flags::ALL_BORDERS_EMPTY;
-    }
-    else {
+    } else {
         m_flags &= ~Flags::ALL_BORDERS_EMPTY;
     }
 
     if (borderingChunks != 8) {
         m_flags |= Flags::MISSING_BORDER_CHUNK;
-    }
-    else {
+    } else {
         m_flags &= ~Flags::MISSING_BORDER_CHUNK;
     }
 }
@@ -244,8 +242,7 @@ void Chunk::processEmpty() {
 
     if (val == 0) {
         m_flags |= Flags::EMPTY;
-    }
-    else {
+    } else {
         m_flags &= ~Flags::EMPTY;
     }
 };

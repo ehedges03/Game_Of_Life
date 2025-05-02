@@ -9,7 +9,7 @@ class Chunk {
 public:
   using RowType = uint16_t;
 
-  enum Flags : uint32_t {
+  enum class Flags : uint32_t {
     CLEAR = 0,
     // Flag specifying that the chunk is currently empty better to just check
     // this than constantly caluclate it
@@ -78,25 +78,28 @@ private:
 };
 
 inline Chunk::Flags operator~(Chunk::Flags a) {
-  return (Chunk::Flags) ~(uint32_t)a;
+  return static_cast<Chunk::Flags>(~static_cast<uint32_t>(a));
 }
 inline Chunk::Flags operator|(Chunk::Flags a, Chunk::Flags b) {
-  return (Chunk::Flags)((uint32_t)a | (uint32_t)b);
+  return static_cast<Chunk::Flags>(static_cast<uint32_t>(a) | static_cast<uint32_t>(b));
 }
 inline Chunk::Flags operator&(Chunk::Flags a, Chunk::Flags b) {
-  return (Chunk::Flags)((uint32_t)a & (uint32_t)b);
+  return static_cast<Chunk::Flags>(static_cast<uint32_t>(a) & static_cast<uint32_t>(b));
 }
 inline Chunk::Flags operator^(Chunk::Flags a, Chunk::Flags b) {
-  return (Chunk::Flags)((uint32_t)a ^ (uint32_t)b);
+  return static_cast<Chunk::Flags>(static_cast<uint32_t>(a) ^ static_cast<uint32_t>(b));
 }
 inline Chunk::Flags &operator|=(Chunk::Flags &a, Chunk::Flags b) {
-  return (Chunk::Flags &)((uint32_t &)a |= (uint32_t)b);
+  a = a | b;
+  return a;
 }
 inline Chunk::Flags &operator&=(Chunk::Flags &a, Chunk::Flags b) {
-  return (Chunk::Flags &)((uint32_t &)a &= (uint32_t)b);
+  a = a & b;
+  return a;
 }
 inline Chunk::Flags &operator^=(Chunk::Flags &a, Chunk::Flags b) {
-  return (Chunk::Flags &)((uint32_t &)a ^= (uint32_t)b);
+  a = a ^ b;
+  return a;
 }
 
 /**
@@ -109,7 +112,7 @@ inline Chunk::Flags &operator^=(Chunk::Flags &a, Chunk::Flags b) {
  * priority
  */
 template <typename UintThingy,
-          long long numVals = (1 << (sizeof(UintThingy) * 8))>
+          uint64_t numVals = (1 << (sizeof(UintThingy) * 8))>
 constexpr std::array<bool, numVals> getThreeConsecutiveBitCheckTable() {
   static_assert(std::numeric_limits<UintThingy>::is_signed == false);
   std::array<bool, numVals> table{};
