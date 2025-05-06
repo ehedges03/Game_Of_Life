@@ -6,9 +6,10 @@
 #include "Chunk.h"
 #include "GameBoard.h"
 #include "LibFunni/log.h"
-#include "Utils/Console.h"
-#include "Utils/WrappedPoint.h"
-#include "glad/glad.h"
+#include "Shader.h"
+#include "Window.h"
+#include "utils/Console.h"
+#include "utils/WrappedPoint.h"
 #include "GLFW/glfw3.h"
 
 void simpleBitArrayTest();
@@ -154,50 +155,47 @@ void simpleLoggerTest() {
   logger.logi();
 }
 
-void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
-  glViewport(0, 0, width, height);
-}
-
-void processInput(GLFWwindow *window) {
-  if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
-    glfwSetWindowShouldClose(window, true);
+void processInput(Window &window) {
+  if (window.keyPressed(GLFW_KEY_ESCAPE)) {
+    window.close();
   }
 }
 
 void simpleGLFWWindow() {
-  glfwInit();
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+  Window gameWindow("Game Of Life", 800, 600);
+  float vertices[] = {
+    -0.5f, -0.5f, 0.0f,
+     0.5f, -0.5f, 0.0f,
+     0.0f,  0.5f, 0.0f
+  };
 
-  GLFWwindow* window = glfwCreateWindow(800, 600, "Game Of Life", nullptr, nullptr);
+  unsigned int vao;
+  glGenVertexArrays(1, &vao);
+  glBindVertexArray(vao);
 
-  if (window == nullptr) {
-    const char* description;
-    glfwGetError(&description);
-    std::cout << "Failed to create window Error: " << description << std::endl;   
-    glfwTerminate();
-    return;
-  }
+  GLuint vbo;
+  glGenBuffers(1, &vbo);
 
-  glfwMakeContextCurrent(window);
+  glBindBuffer(GL_ARRAY_BUFFER, vbo); 
+  glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-  if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-    std::cout << "Failed to initialize GLAD" << std::endl;
-    return;
-  }
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+  glEnableVertexAttribArray(0);
 
-  glViewport(0, 0, 800, 600);
-  glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+  Shader shaderProgram("basic.vert", "basic.frag");
 
-  while(!glfwWindowShouldClose(window))
+  while(!gameWindow.shouldClose())
   {
-      processInput(window); 
+    processInput(gameWindow); 
 
-      glfwSwapBuffers(window);
-      glfwPollEvents();
+    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    shaderProgram.use();
+    glBindVertexArray(vao);
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+
+    gameWindow.swapBuffers();
+    Window::pollEvents();
   }
-
-  glfwDestroyWindow(window);
-  glfwTerminate();
 }

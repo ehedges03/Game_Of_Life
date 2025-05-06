@@ -5,7 +5,7 @@
 
 #include "Chunk.h"
 #include "GameBoard.h"
-#include "Utils/Console.h"
+#include "utils/Console.h"
 
 /*
 GameBoard method definitions
