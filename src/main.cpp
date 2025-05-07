@@ -1,24 +1,30 @@
-#include "BitArray.h"
-#include "GameBoard.h"
-#include "LibFunni/log.h"
-#include "Utils/Console.h"
-#include "Utils/WrappedPoint.h"
 #include <bitset>
 #include <chrono>
 #include <iostream>
+
+#include "BitArray.h"
+#include "Chunk.h"
+#include "GameBoard.h"
+#include "LibFunni/log.h"
+#include "Shader.h"
+#include "Window.h"
+#include "utils/Console.h"
+#include "utils/WrappedPoint.h"
 
 void simpleBitArrayTest();
 void simpleChunkTest();
 void simpleGameBoardTest();
 void simpleWrappedPointTest();
 void simpleLoggerTest();
+void simpleGLFWWindow();
 
 int main() {
   simpleBitArrayTest();
   simpleWrappedPointTest();
   // simpleChunkTest();
-  simpleGameBoardTest();
+  // simpleGameBoardTest();
   simpleLoggerTest();
+  simpleGLFWWindow();
 }
 
 void simpleBitArrayTest() {
@@ -146,4 +152,44 @@ void simpleLoggerTest() {
   logger.logi();
   logger.logw();
   logger.logi();
+}
+
+void processInput(Window &window) {
+  if (window.keyPressed(GLFW_KEY_ESCAPE)) {
+    window.close();
+  }
+}
+
+void simpleGLFWWindow() {
+  Window gameWindow("Game Of Life", 800, 600);
+  float vertices[] = {-0.5f, -0.5f, 0.0f, 0.5f, -0.5f, 0.0f, 0.0f, 0.5f, 0.0f};
+
+  unsigned int vao;
+  glGenVertexArrays(1, &vao);
+  glBindVertexArray(vao);
+
+  GLuint vbo;
+  glGenBuffers(1, &vbo);
+
+  glBindBuffer(GL_ARRAY_BUFFER, vbo);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
+  glEnableVertexAttribArray(0);
+
+  Shader shaderProgram("basic.vert", "basic.frag");
+
+  while (!gameWindow.shouldClose()) {
+    processInput(gameWindow);
+
+    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    shaderProgram.use();
+    glBindVertexArray(vao);
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+
+    gameWindow.swapBuffers();
+    Window::pollEvents();
+  }
 }

@@ -6,8 +6,6 @@
 #include <memory>
 #include <unordered_map>
 
-#include "Chunk.h"
-
 #define VISUALIZE_BORDERS 0
 #define VISUALIZE_DEFAULT 1
 #define VISUALIZE VISUALIZE_DEFAULT
@@ -52,6 +50,8 @@ public:
   }
 };
 
+class Chunk;
+
 /**
  * Main gameboard structure for working with chunks and controlling the system.
  */
@@ -63,6 +63,7 @@ public:
   void update();
 
   friend std::ostream &operator<<(std::ostream &o, GameBoard &g);
+
 private:
   friend class Chunk;
 
