@@ -1,6 +1,6 @@
 #include "Window.h"
-#include <stdexcept>
 #include <iostream>
+#include <stdexcept>
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
   glViewport(0, 0, width, height);
@@ -20,10 +20,11 @@ Window::Window(const char *name, int width, int height) {
   m_window = glfwCreateWindow(width, height, name, nullptr, nullptr);
 
   if (m_window == nullptr) {
-    const char* description;
+    const char *description;
     glfwGetError(&description);
     glfwTerminate();
-    throw new std::runtime_error("Failed to Create Window Error: " + std::string(description));
+    throw new std::runtime_error("Failed to Create Window Error: " +
+                                 std::string(description));
   }
 
   glfwMakeContextCurrent(m_window);
@@ -44,21 +45,13 @@ Window::~Window() {
   }
 }
 
-void Window::close() {
-  glfwSetWindowShouldClose(m_window, true);
-}
+void Window::close() { glfwSetWindowShouldClose(m_window, true); }
 
-bool Window::shouldClose() {
-  return glfwWindowShouldClose(m_window);
-}
+bool Window::shouldClose() { return glfwWindowShouldClose(m_window); }
 
-void Window::swapBuffers() {
-  glfwSwapBuffers(m_window);
-}
+void Window::swapBuffers() { glfwSwapBuffers(m_window); }
 
-void Window::pollEvents() {
-  glfwPollEvents();
-}
+void Window::pollEvents() { glfwPollEvents(); }
 
 bool Window::keyPressed(int key) {
   return glfwGetKey(m_window, key) == GLFW_PRESS;

@@ -10,7 +10,6 @@
 #include "Window.h"
 #include "utils/Console.h"
 #include "utils/WrappedPoint.h"
-#include "GLFW/glfw3.h"
 
 void simpleBitArrayTest();
 void simpleChunkTest();
@@ -163,11 +162,7 @@ void processInput(Window &window) {
 
 void simpleGLFWWindow() {
   Window gameWindow("Game Of Life", 800, 600);
-  float vertices[] = {
-    -0.5f, -0.5f, 0.0f,
-     0.5f, -0.5f, 0.0f,
-     0.0f,  0.5f, 0.0f
-  };
+  float vertices[] = {-0.5f, -0.5f, 0.0f, 0.5f, -0.5f, 0.0f, 0.0f, 0.5f, 0.0f};
 
   unsigned int vao;
   glGenVertexArrays(1, &vao);
@@ -176,17 +171,16 @@ void simpleGLFWWindow() {
   GLuint vbo;
   glGenBuffers(1, &vbo);
 
-  glBindBuffer(GL_ARRAY_BUFFER, vbo); 
+  glBindBuffer(GL_ARRAY_BUFFER, vbo);
   glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
   glEnableVertexAttribArray(0);
 
   Shader shaderProgram("basic.vert", "basic.frag");
 
-  while(!gameWindow.shouldClose())
-  {
-    processInput(gameWindow); 
+  while (!gameWindow.shouldClose()) {
+    processInput(gameWindow);
 
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);

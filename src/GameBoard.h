@@ -63,6 +63,7 @@ public:
   void update();
 
   friend std::ostream &operator<<(std::ostream &o, GameBoard &g);
+
 private:
   friend class Chunk;
 

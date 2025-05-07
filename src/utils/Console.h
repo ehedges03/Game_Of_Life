@@ -33,11 +33,11 @@ public:
 
 class Screen {
 public:
-  static void clear() { 
+  static void clear() {
 #ifdef _WIN32
-      system("CLS");
+    system("CLS");
 #else
-      std::cout << "\033[2J" << std::flush; // everything else is .. . bash (?)
+    std::cout << "\033[2J" << std::flush; // everything else is .. . bash (?)
 #endif
   }
 

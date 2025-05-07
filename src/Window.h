@@ -1,12 +1,14 @@
 #pragma once
+// clang-format off
 #include "glad/glad.h"
 #include "GLFW/glfw3.h"
+// clang-format on
 
 class Window {
 public:
   static void pollEvents();
 
-  Window(const char* name, int height, int width);
+  Window(const char *name, int height, int width);
   ~Window();
 
   void close();
@@ -21,5 +23,5 @@ public:
 
 private:
   static unsigned int s_numOfWindows;
-  GLFWwindow* m_window;
+  GLFWwindow *m_window;
 };

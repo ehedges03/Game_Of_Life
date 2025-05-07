@@ -81,13 +81,16 @@ inline Chunk::Flags operator~(Chunk::Flags a) {
   return static_cast<Chunk::Flags>(~static_cast<uint32_t>(a));
 }
 inline Chunk::Flags operator|(Chunk::Flags a, Chunk::Flags b) {
-  return static_cast<Chunk::Flags>(static_cast<uint32_t>(a) | static_cast<uint32_t>(b));
+  return static_cast<Chunk::Flags>(static_cast<uint32_t>(a) |
+                                   static_cast<uint32_t>(b));
 }
 inline Chunk::Flags operator&(Chunk::Flags a, Chunk::Flags b) {
-  return static_cast<Chunk::Flags>(static_cast<uint32_t>(a) & static_cast<uint32_t>(b));
+  return static_cast<Chunk::Flags>(static_cast<uint32_t>(a) &
+                                   static_cast<uint32_t>(b));
 }
 inline Chunk::Flags operator^(Chunk::Flags a, Chunk::Flags b) {
-  return static_cast<Chunk::Flags>(static_cast<uint32_t>(a) ^ static_cast<uint32_t>(b));
+  return static_cast<Chunk::Flags>(static_cast<uint32_t>(a) ^
+                                   static_cast<uint32_t>(b));
 }
 inline Chunk::Flags &operator|=(Chunk::Flags &a, Chunk::Flags b) {
   a = a | b;
