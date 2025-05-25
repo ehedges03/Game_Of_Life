@@ -162,7 +162,19 @@ void processInput(Window &window) {
 
 void simpleGLFWWindow() {
   Window gameWindow("Game Of Life", 800, 600);
-  float vertices[] = {-0.5f, -0.5f, 0.0f, 0.5f, -0.5f, 0.0f, 0.0f, 0.5f, 0.0f};
+  // clang-format off
+  float vertices[] = {
+    // First triangle
+    0.0f, 0.0f, 0.0f, 0.0f, // top left
+    1.0f, 0.0f, 1.0f, 0.0f, // top right
+    0.0f, -1.0f, 0.0f, 1.0f, // bottom left
+
+    // Second triangle
+    0.0f, -1.0f, 0.0f, 1.0f, // bottom left
+    1.0f, 0.0f, 1.0f, 0.0f, // top right
+    1.0f, -1.0f, 1.0f, 1.0f  // bottom right
+  };
+  // clang-format on
 
   unsigned int vao;
   glGenVertexArrays(1, &vao);
@@ -174,10 +186,21 @@ void simpleGLFWWindow() {
   glBindBuffer(GL_ARRAY_BUFFER, vbo);
   glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
+  glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *)0);
   glEnableVertexAttribArray(0);
 
-  Shader shaderProgram("basic.vert", "basic.frag");
+  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float),
+                        (void *)(2 * sizeof(float)));
+  glEnableVertexAttribArray(1);
+
+  Shader shaderProgram("chunk.vert", "chunk.frag");
+
+  GLint loc = shaderProgram.getUniformLocation("uData");
+
+  uint32_t data[] = {0xAA55AA55, 0x55AA55AA};
+
+  shaderProgram.use();
+  glUniform1uiv(loc, 2, data);
 
   while (!gameWindow.shouldClose()) {
     processInput(gameWindow);
@@ -187,7 +210,7 @@ void simpleGLFWWindow() {
 
     shaderProgram.use();
     glBindVertexArray(vao);
-    glDrawArrays(GL_TRIANGLES, 0, 3);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
 
     gameWindow.swapBuffers();
     Window::pollEvents();
