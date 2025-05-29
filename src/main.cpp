@@ -176,7 +176,7 @@ void simpleGLFWWindow() {
   };
   // clang-format on
 
-  unsigned int vao;
+  GLuint vao;
   glGenVertexArrays(1, &vao);
   glBindVertexArray(vao);
 
