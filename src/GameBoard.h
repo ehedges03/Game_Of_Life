@@ -57,20 +57,23 @@ class Chunk;
  */
 class GameBoard {
 public:
+  int currentGeneration() const { return m_generation; };
   void setPoint(int32_t x, int32_t y, bool value);
-  bool getPoint(int32_t x, int32_t y);
+  bool getPoint(int32_t x, int32_t y) const;
 
   void update();
 
   friend std::ostream &operator<<(std::ostream &o, GameBoard &g);
   using const_iterator =
-      typename std::unordered_map<ChunkKey, std::shared_ptr<Chunk>, ChunkKeyHash>::const_iterator;
+      typename std::unordered_map<ChunkKey, std::shared_ptr<Chunk>,
+                                  ChunkKeyHash>::const_iterator;
 
   const_iterator begin() const { return m_chunks.begin(); };
   const_iterator end() const { return m_chunks.end(); };
 
 private:
   friend class Chunk;
+  int m_generation = 0;
 
   std::unordered_map<ChunkKey, std::shared_ptr<Chunk>, ChunkKeyHash> m_chunks;
 
@@ -78,13 +81,13 @@ private:
    * Take a general (x,y) coordinate and find the chunk that it cooresponds
    * with.
    */
-  ChunkKey calcChunkKey(int32_t x, int32_t y);
+  ChunkKey calcChunkKey(int32_t x, int32_t y) const;
   void makeChunk(ChunkKey key);
   /**
    * Delets a given chunk's border connections
    */
   void deleteChunkBorders(std::shared_ptr<Chunk> c);
-  std::shared_ptr<Chunk> getChunk(ChunkKey key);
+  std::shared_ptr<Chunk> getChunk(ChunkKey key) const;
   std::shared_ptr<Chunk> getOrMakeChunk(ChunkKey key);
   void makeBorderChunks(ChunkKey key, std::shared_ptr<Chunk> c);
 };

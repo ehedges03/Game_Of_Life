@@ -34,7 +34,7 @@ void GameBoard::setPoint(int32_t x, int32_t y, bool value) {
   chunk->setCell(properX, properY, value);
 }
 
-bool GameBoard::getPoint(int32_t x, int32_t y) {
+bool GameBoard::getPoint(int32_t x, int32_t y) const {
   ChunkKey key = calcChunkKey(x, y);
   auto chunk = getChunk(key);
 
@@ -46,7 +46,7 @@ bool GameBoard::getPoint(int32_t x, int32_t y) {
 }
 
 void GameBoard::update() {
-
+  m_generation++;
   // Check chunks for deletion
   for (auto it = m_chunks.begin(); it != m_chunks.end();) {
     Chunk::Flags flags = it->second->getFlags();
@@ -112,7 +112,7 @@ void GameBoard::deleteChunkBorders(std::shared_ptr<Chunk> c) {
     c->downRight->upLeft = nullptr;
 }
 
-ChunkKey GameBoard::calcChunkKey(int32_t x, int32_t y) {
+ChunkKey GameBoard::calcChunkKey(int32_t x, int32_t y) const {
   int32_t realChunkX, realChunkY;
 
   if (x >= 0) {
@@ -130,7 +130,7 @@ ChunkKey GameBoard::calcChunkKey(int32_t x, int32_t y) {
   return {realChunkX, realChunkY};
 }
 
-std::shared_ptr<Chunk> GameBoard::getChunk(ChunkKey key) {
+std::shared_ptr<Chunk> GameBoard::getChunk(ChunkKey key) const {
   auto chunk_entry = m_chunks.find(key);
   if (chunk_entry == m_chunks.end()) {
     return nullptr;

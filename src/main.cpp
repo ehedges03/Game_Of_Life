@@ -161,6 +161,9 @@ void processInput(Window &window, GameBoard &gb) {
 
   if (window.keyPressed(GLFW_KEY_ENTER)) {
     gb.update();
+    if (gb.currentGeneration() % 100 == 0) {
+      std::cout << gb.currentGeneration() << std::endl;
+    }
   }
 }
 
@@ -175,8 +178,10 @@ void simpleGLFWWindow() {
 
   for (auto [key, chunk] : gb) {
     auto data = chunk->data();
-    std::cout << std::setfill('0') << std::setw(8) << std::hex << data[0] << std::endl;
-    std::cout << std::setfill('0') << std::setw(8) << std::hex << data[1] << std::endl;
+    std::cout << std::hex;
+    std::cout << std::setfill('0') << std::setw(8) << data[0] << std::endl;
+    std::cout << std::setfill('0') << std::setw(8) << data[1] << std::endl;
+    std::cout << std::dec;
   }
 
   Window gameWindow("Game Of Life", 800, 600);
@@ -235,7 +240,8 @@ void simpleGLFWWindow() {
     shaderProgram.use();
     glBindVertexArray(vao);
     for (const auto [key, chunk] : gb) {
-      float originX = key.x * CHUNK_SIZE, originY = (key.y * CHUNK_SIZE) + CHUNK_SIZE;
+      float originX = key.x * CHUNK_SIZE,
+            originY = (key.y * CHUNK_SIZE) + CHUNK_SIZE;
       transformation[2] = (originX * 2.0f) / width;
       transformation[5] = (originY * 2.0f) / height;
       glUniformMatrix3fv(transposeLoc, 1, true, transformation);
@@ -245,7 +251,6 @@ void simpleGLFWWindow() {
 
       glDrawArrays(GL_TRIANGLES, 0, 6);
     }
-
 
     gameWindow.swapBuffers();
     Window::pollEvents();
