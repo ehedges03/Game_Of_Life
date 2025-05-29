@@ -63,6 +63,11 @@ public:
   void update();
 
   friend std::ostream &operator<<(std::ostream &o, GameBoard &g);
+  using const_iterator =
+      typename std::unordered_map<ChunkKey, std::shared_ptr<Chunk>, ChunkKeyHash>::const_iterator;
+
+  const_iterator begin() const { return m_chunks.begin(); };
+  const_iterator end() const { return m_chunks.end(); };
 
 private:
   friend class Chunk;

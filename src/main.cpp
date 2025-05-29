@@ -154,13 +154,31 @@ void simpleLoggerTest() {
   logger.logi();
 }
 
-void processInput(Window &window) {
+void processInput(Window &window, GameBoard &gb) {
   if (window.keyPressed(GLFW_KEY_ESCAPE)) {
     window.close();
+  }
+
+  if (window.keyPressed(GLFW_KEY_ENTER)) {
+    gb.update();
   }
 }
 
 void simpleGLFWWindow() {
+  GameBoard gb;
+
+  for (int y = 0; y < 8; y++) {
+    for (int x = 0; x < 8; x++) {
+      gb.setPoint(x, y, chunkStart[7 - y][7 - x]);
+    }
+  }
+
+  for (auto [key, chunk] : gb) {
+    auto data = chunk->data();
+    std::cout << std::setfill('0') << std::setw(8) << std::hex << data[0] << std::endl;
+    std::cout << std::setfill('0') << std::setw(8) << std::hex << data[1] << std::endl;
+  }
+
   Window gameWindow("Game Of Life", 800, 600);
   // clang-format off
   float vertices[] = {
@@ -195,22 +213,39 @@ void simpleGLFWWindow() {
 
   Shader shaderProgram("chunk.vert", "chunk.frag");
 
-  GLint loc = shaderProgram.getUniformLocation("uData");
+  GLint dataLoc = shaderProgram.getUniformLocation("u_data");
+  GLint transposeLoc = shaderProgram.getUniformLocation("u_transform");
 
-  uint32_t data[] = {0xAA55AA55, 0x55AA55AA};
+  static const float CHUNK_SIZE = 8.0f;
+  float transformation[9] = {};
 
   shaderProgram.use();
-  glUniform1uiv(loc, 2, data);
+  glUniformMatrix3fv(transposeLoc, 1, true, transformation);
 
   while (!gameWindow.shouldClose()) {
-    processInput(gameWindow);
+    processInput(gameWindow, gb);
 
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
+    auto [width, height] = gameWindow.getFramebufferSize();
+    transformation[0] = (CHUNK_SIZE * 2.0f) / width;
+    transformation[4] = (CHUNK_SIZE * 2.0f) / height;
+
     shaderProgram.use();
     glBindVertexArray(vao);
-    glDrawArrays(GL_TRIANGLES, 0, 6);
+    for (const auto [key, chunk] : gb) {
+      float originX = key.x * CHUNK_SIZE, originY = (key.y * CHUNK_SIZE) + CHUNK_SIZE;
+      transformation[2] = (originX * 2.0f) / width;
+      transformation[5] = (originY * 2.0f) / height;
+      glUniformMatrix3fv(transposeLoc, 1, true, transformation);
+
+      auto data = chunk->data();
+      glUniform1uiv(dataLoc, 2, data.data());
+
+      glDrawArrays(GL_TRIANGLES, 0, 6);
+    }
+
 
     gameWindow.swapBuffers();
     Window::pollEvents();

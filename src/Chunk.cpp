@@ -50,7 +50,7 @@ constexpr std::array<bool, 32> createCornerMap() {
 // Map of byte to the number of bits in it
 static const std::array<bool, 32> cornerMap = createCornerMap();
 
-bool Chunk::getCell(int32_t x, int32_t y) {
+bool Chunk::getCell(int32_t x, int32_t y) const {
   uint64_t mask = 1ul << (k_size - x);
   return m_data[y + 1] & mask;
 }
@@ -67,6 +67,17 @@ void Chunk::setCell(int32_t x, int32_t y, bool val) {
   } else {
     m_data[y + 1] &= ~loc;
   }
+}
+
+std::array<uint32_t, 2> Chunk::data() const {
+  std::array<uint32_t, 2> data = {};
+  for (int y = k_size - 1; y >= 0; y--) {
+    int dataByte = (k_size - 1 - y) / 4;
+    data[dataByte] = data[dataByte] << k_size;
+    uint32_t databits = (m_data[y + 1] & k_dataBits) >> 1;
+    data[dataByte] |= databits;
+  }
+  return data;
 }
 
 void Chunk::readInBorder() {

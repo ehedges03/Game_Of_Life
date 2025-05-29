@@ -43,10 +43,11 @@ public:
   // just be a function called getFlags() or maybe both?
   void processNextState();
   void readInBorder();
-  Flags getFlags() { return m_flags; }
+  Flags getFlags() const { return m_flags; }
 
-  bool getCell(int32_t x, int32_t y);
+  bool getCell(int32_t x, int32_t y) const;
   void setCell(int32_t x, int32_t y, bool val);
+  std::array<uint32_t, 2> data() const;
 
   using iterator = typename std::array<RowType, k_size + 2>::iterator;
   using reverse_iterator =
