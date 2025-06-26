@@ -4,6 +4,9 @@
 #include <stdexcept>
 #include <utility>
 
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_opengl3.h>
+
 void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
   glViewport(0, 0, width, height);
 }
@@ -11,8 +14,15 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
 unsigned int Window::s_numOfWindows = 0;
 
 Window::Window(const char *title, int width, int height) {
-  if (s_numOfWindows++ == 0 && !glfwInit()) {
-    throw std::runtime_error("Failed to intialize GLFW");
+  if (s_numOfWindows++ == 0) {
+    // Setup glfw
+    if (!glfwInit()) {
+      throw std::runtime_error("Failed to intialize GLFW");
+    }
+
+    // Setup Dear ImGui context
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
   }
 
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -25,11 +35,21 @@ Window::Window(const char *title, int width, int height) {
     const char *description;
     glfwGetError(&description);
     glfwTerminate();
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
     throw std::runtime_error("Failed to Create Window Error: " +
                              std::string(description));
   }
 
   glfwMakeContextCurrent(m_window);
+  glfwSwapInterval(1);
+
+  // Setup Platform/Renderer bindings
+  ImGui_ImplGlfw_InitForOpenGL(m_window, false);
+  ImGui_ImplOpenGL3_Init("#version 330");
+  // Setup Dear ImGui style
+  ImGui::StyleColorsDark();
 
   if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
     std::cout << "Failed to initialize GLAD" << std::endl;
@@ -43,12 +63,18 @@ Window::Window(const char *title, int width, int height) {
   glfwSetMouseButtonCallback(m_window, Window::mouseButtonCallbackBridge);
   glfwSetCursorPosCallback(m_window, Window::cursorPosCallbackBridge);
   glfwSetScrollCallback(m_window, Window::scrollCallbackBridge);
+
+  ImGui_ImplGlfw_InstallCallbacks(m_window);
 }
 
 Window::~Window() {
   glfwDestroyWindow(m_window);
   if (--s_numOfWindows == 0) {
     glfwTerminate();
+
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
   }
 }
 
@@ -118,6 +144,9 @@ void Window::keyCallbackBridge(GLFWwindow *window, int key, int scancode,
     return;
 #endif
 
+  if (ImGui::GetIO().WantCaptureKeyboard)
+    return;
+
   for (auto cb : instance->m_keyCallbacks) {
     cb.second(*instance, key, scancode, action, mods);
   }
@@ -132,6 +161,8 @@ void Window::mouseButtonCallbackBridge(GLFWwindow *window, int button,
   if (!instance)
     return;
 #endif
+  if (ImGui::GetIO().WantCaptureMouse)
+    return;
 
   for (auto cb : instance->m_mouseButtonCallbacks) {
     cb.second(*instance, button, action, mods);
@@ -162,6 +193,9 @@ void Window::scrollCallbackBridge(GLFWwindow *window, double xoffset,
   if (!instance)
     return;
 #endif
+
+  if (ImGui::GetIO().WantCaptureMouse)
+    return;
 
   for (auto cb : instance->m_scrollCallbacks) {
     cb.second(*instance, xoffset, yoffset);

@@ -2,6 +2,10 @@
 #include <chrono>
 #include <iostream>
 
+#include <imgui.h>
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_opengl3.h>
+
 #include "BitArray.h"
 #include "Chunk.h"
 #include "GameBoard.h"
@@ -10,6 +14,16 @@
 #include "Window.h"
 #include "utils/Console.h"
 #include "utils/WrappedPoint.h"
+
+struct View {
+  float scale;
+  float panX;
+  float panY;
+
+  View() : scale(1), panX(0), panY(0) {}
+  View(float zoom, float panX, float panY)
+      : scale(zoom), panX(panX), panY(panY) {}
+};
 
 void simpleBitArrayTest();
 void simpleChunkTest();
@@ -154,17 +168,89 @@ void simpleLoggerTest() {
   logger.logi();
 }
 
-void processInput(Window &window, GameBoard &gb) {
+constexpr float PAN_DELTA = 5;
+constexpr float ZOOM_RATE = 1.1;
+
+void processInput(Window &window, GameBoard &gb, View &view) {
+  ImGuiIO &io = ImGui::GetIO();
+  if (io.WantCaptureKeyboard)
+    return;
+
   if (window.keyPressed(GLFW_KEY_ESCAPE)) {
     window.close();
   }
 
   if (window.keyPressed(GLFW_KEY_ENTER)) {
     gb.update();
-    if (gb.currentGeneration() % 100 == 0) {
-      std::cout << gb.currentGeneration() << std::endl;
+  }
+
+  // Pan controls - WASD basic control
+  if (window.keyPressed(GLFW_KEY_W)) {
+    view.panY += PAN_DELTA;
+  }
+  if (window.keyPressed(GLFW_KEY_A)) {
+    view.panX -= PAN_DELTA;
+  }
+  if (window.keyPressed(GLFW_KEY_S)) {
+    view.panY -= PAN_DELTA;
+  }
+  if (window.keyPressed(GLFW_KEY_D)) {
+    view.panX += PAN_DELTA;
+  }
+
+  // Zoom controls - Q zoom out, E zoom in
+  if (window.keyPressed(GLFW_KEY_E)) {
+    view.panX *= ZOOM_RATE;
+    view.panY *= ZOOM_RATE;
+    view.scale *= ZOOM_RATE;
+  }
+
+  if (window.keyPressed(GLFW_KEY_Q)) {
+    view.panX /= ZOOM_RATE;
+    view.panY /= ZOOM_RATE;
+    view.scale /= ZOOM_RATE;
+  }
+}
+
+void renderGUI(GameBoard &gb, View &view) {
+  ImGuiIO &io = ImGui::GetIO();
+  // render your GUI
+  ImGui::Begin("Game Of Life Controls");
+
+  ImGui::Text("Current Generation: %d", gb.currentGeneration());
+  ImGui::SameLine();
+  if (ImGui::Button("Progress")) {
+    gb.update();
+  }
+
+  if (ImGui::Button("Home")) {
+    view.panX = 0;
+    view.panY = 0;
+    view.scale = 1;
+  }
+
+  if (ImGui::IsMousePosValid()) {
+    ImGui::Text("Mouse Pos: (%g, %g)", io.MousePos.x, io.MousePos.y);
+  } else {
+    ImGui::Text("Mouse Pos: <INVALID>");
+  }
+
+  ImGui::Text("FPS: %g", io.Framerate);
+  static bool vsyncEnabled = true;
+  if (ImGui::Checkbox("V-Sync", &vsyncEnabled)) {
+    if (vsyncEnabled) {
+      glfwSwapInterval(1);
+    } else {
+      glfwSwapInterval(0);
     }
   }
+
+  ImGui::End();
+
+  // Render dear imgui into screen
+  // ImGui::ShowDemoWindow();
+  ImGui::Render();
+  ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
 void simpleGLFWWindow() {
@@ -191,7 +277,6 @@ void simpleGLFWWindow() {
     0.0f, 0.0f, 0.0f, 0.0f, // top left
     1.0f, 0.0f, 1.0f, 0.0f, // top right
     0.0f, -1.0f, 0.0f, 1.0f, // bottom left
-
     // Second triangle
     0.0f, -1.0f, 0.0f, 1.0f, // bottom left
     1.0f, 0.0f, 1.0f, 0.0f, // top right
@@ -219,38 +304,76 @@ void simpleGLFWWindow() {
   Shader shaderProgram("chunk.vert", "chunk.frag");
 
   GLint dataLoc = shaderProgram.getUniformLocation("u_data");
+  GLint projectionLoc = shaderProgram.getUniformLocation("u_projection");
+  GLint viewLoc = shaderProgram.getUniformLocation("u_view");
   GLint transposeLoc = shaderProgram.getUniformLocation("u_transform");
 
+  gameWindow.addKeyCallback(
+      [&gb](Window &window, int key, int scancode, int action, int mods) {
+        if (key == GLFW_KEY_SPACE && action == GLFW_PRESS) {
+          gb.update();
+        }
+      });
+
+  gameWindow.addMouseButtonCallback(
+      [](Window &window, int button, int action, int mods) {
+        ImGuiIO &io = ImGui::GetIO();
+        std::cout << button << " click occured at: " << io.MousePos.x << ", "
+                  << io.MousePos.y << std::endl;
+      });
+
   static const float CHUNK_SIZE = 8.0f;
-  float transformation[9] = {};
+  std::array<float, 9> projectionMat = {};
+  std::array<float, 9> viewMat = {};
 
   shaderProgram.use();
-  glUniformMatrix3fv(transposeLoc, 1, true, transformation);
+  View view(1, 100, 100);
+
+  ImGuiIO &io = ImGui::GetIO();
+  io.Fonts->AddFontFromFileTTF("assets/fonts/doto/Doto-Regular.ttf", 24.0f);
 
   while (!gameWindow.shouldClose()) {
-    processInput(gameWindow, gb);
+    processInput(gameWindow, gb, view);
 
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+
     auto [width, height] = gameWindow.getFramebufferSize();
-    transformation[0] = (CHUNK_SIZE * 2.0f) / width;
-    transformation[4] = (CHUNK_SIZE * 2.0f) / height;
+    projectionMat[0] = (2.0f) / width;
+    projectionMat[4] = (2.0f) / height;
+    glUniformMatrix3fv(projectionLoc, 1, true, projectionMat.data());
+
+    viewMat[0] = view.scale;
+    viewMat[4] = view.scale;
+    viewMat[2] = -view.panX;
+    viewMat[5] = -view.panY;
+    viewMat[8] = 1.0f;
+    glUniformMatrix3fv(viewLoc, 1, true, viewMat.data());
 
     shaderProgram.use();
     glBindVertexArray(vao);
     for (const auto [key, chunk] : gb) {
+      std::array<float, 9> transform = {};
       float originX = key.x * CHUNK_SIZE,
             originY = (key.y * CHUNK_SIZE) + CHUNK_SIZE;
-      transformation[2] = (originX * 2.0f) / width;
-      transformation[5] = (originY * 2.0f) / height;
-      glUniformMatrix3fv(transposeLoc, 1, true, transformation);
+      transform[0] = CHUNK_SIZE;
+      transform[2] = originX;
+      transform[4] = CHUNK_SIZE;
+      transform[5] = originY;
+      transform[8] = 1.0f;
+      glUniformMatrix3fv(transposeLoc, 1, true, transform.data());
 
       auto data = chunk->data();
       glUniform1uiv(dataLoc, 2, data.data());
 
       glDrawArrays(GL_TRIANGLES, 0, 6);
     }
+
+    renderGUI(gb, view);
 
     gameWindow.swapBuffers();
     Window::pollEvents();

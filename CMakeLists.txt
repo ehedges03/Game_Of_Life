@@ -15,11 +15,12 @@ file(GLOB_RECURSE src_files ${CMAKE_CURRENT_SOURCE_DIR}/src/*.[ch]pp ${CMAKE_CUR
 add_subdirectory(libraries)
 find_package(glfw3 CONFIG REQUIRED)
 find_package(glad CONFIG REQUIRED)
+find_package(imgui CONFIG REQUIRED)
 
 add_executable(${PROJECT_NAME} ${src_files})
 
 # Link with FunniLib
-target_link_libraries(${PROJECT_NAME} PRIVATE LibFunni PRIVATE glfw PRIVATE glad::glad)
+target_link_libraries(${PROJECT_NAME} PRIVATE LibFunni PRIVATE glfw PRIVATE glad::glad PRIVATE imgui::imgui)
 
 
 

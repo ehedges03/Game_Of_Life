@@ -7,6 +7,8 @@
 #include <functional>
 #include <unordered_map>
 
+#include <imgui.h>
+
 class Window;
 
 using KeyCallback = std::function<void(Window &window, int key, int scancode,
@@ -31,6 +33,7 @@ public:
   bool shouldClose();
   void swapBuffers();
   std::pair<int, int> getFramebufferSize() const;
+  const std::pair<double, double> &getMousePos() const;
 
   bool keyPressed(int key);
   CallbackId addKeyCallback(KeyCallback callback);
@@ -45,6 +48,7 @@ public:
 private:
   static unsigned int s_numOfWindows;
   GLFWwindow *m_window;
+
   CallbackId m_nextKeyCbId;
   std::unordered_map<CallbackId, KeyCallback> m_keyCallbacks;
   CallbackId m_nextMouseButtonCbId;
@@ -54,8 +58,14 @@ private:
   CallbackId m_nextScrollCbId;
   std::unordered_map<CallbackId, ScrollCallback> m_scrollCallbacks;
 
-  static void keyCallbackBridge(GLFWwindow *window, int key, int scancode, int action, int mods);
-  static void mouseButtonCallbackBridge(GLFWwindow* window, int button, int action, int mods);
-  static void cursorPosCallbackBridge(GLFWwindow* window, double xpos, double ypos);
-  static void scrollCallbackBridge(GLFWwindow* window, double xoffset, double yoffset);
+  std::pair<double, double> m_mousePos;
+
+  static void keyCallbackBridge(GLFWwindow *window, int key, int scancode,
+                                int action, int mods);
+  static void mouseButtonCallbackBridge(GLFWwindow *window, int button,
+                                        int action, int mods);
+  static void cursorPosCallbackBridge(GLFWwindow *window, double xpos,
+                                      double ypos);
+  static void scrollCallbackBridge(GLFWwindow *window, double xoffset,
+                                   double yoffset);
 };

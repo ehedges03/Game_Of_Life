@@ -405,3 +405,5 @@ CMakeFiles
 CMakeCache.txt
 GameOfLife
 **/cmake_install.cmake
+imgui.ini
+vcpkg_installed
