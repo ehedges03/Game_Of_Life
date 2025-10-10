@@ -1,8 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
 
-# Set project name
-project(GameOfLife LANGUAGES C CXX)
-
 # Set C++ Standard
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -10,29 +7,15 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Export compile commands for nvim lsp
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-file(GLOB_RECURSE src_files ${CMAKE_CURRENT_SOURCE_DIR}/src/*.[ch]pp ${CMAKE_CURRENT_SOURCE_DIR}/src/*.[ch])
+# Set project name
+project(GameOfLife LANGUAGES C CXX)
 
-add_subdirectory(libraries)
 find_package(glfw3 CONFIG REQUIRED)
 find_package(glad CONFIG REQUIRED)
 
-add_executable(${PROJECT_NAME} ${src_files})
-
-# Link with FunniLib
-target_link_libraries(${PROJECT_NAME} PRIVATE LibFunni PRIVATE glfw PRIVATE glad::glad)
-
-
-
-
-
-
-
-
-
-
-
-
-
+add_subdirectory(libraries)
+add_subdirectory(src)
+add_subdirectory(test)
 
 # # List the files of the current local project 
 # #    Default behavior: Automatically add all hpp and cpp files from src/ directory

@@ -12,7 +12,7 @@ public:
   enum class Flags : uint32_t {
     CLEAR = 0,
     // Flag specifying that the chunk is currently empty better to just check
-    // this than constantly caluclate it
+    // this than constantly calculate it
     EMPTY = 1,
     // Flag specifying that one or more of the surrounding border chunks does
     // not exist
